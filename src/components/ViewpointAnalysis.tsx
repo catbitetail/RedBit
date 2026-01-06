@@ -13,7 +13,12 @@ const ViewpointAnalysis: React.FC<Props> = ({ data, forceExpand = false }) => {
   const { t } = useLanguage();
   const [expandedCategory, setExpandedCategory] = useState<number | null>(0);
 
-  if (!data.comprehensive_viewpoints || data.comprehensive_viewpoints.length === 0) {
+  // 安全检查：确保 comprehensive_viewpoints 是数组
+  const safeViewpoints = Array.isArray(data.comprehensive_viewpoints) 
+    ? data.comprehensive_viewpoints 
+    : [];
+
+  if (safeViewpoints.length === 0) {
       return null;
   }
 
@@ -44,10 +49,11 @@ const ViewpointAnalysis: React.FC<Props> = ({ data, forceExpand = false }) => {
       </div>
 
       <div className="divide-y divide-slate-50 dark:divide-slate-800">
-        {data.comprehensive_viewpoints.map((cat: ViewpointCategory, idx: number) => {
+        {safeViewpoints.map((cat: ViewpointCategory, idx: number) => {
             // Logic: Expand if it's the active index OR if forceExpand (PDF mode) is true
             const isExpanded = forceExpand || expandedCategory === idx;
-            const points = cat.viewpoints || [];
+            // 安全访问 viewpoints，确保它是数组
+            const points = Array.isArray(cat.viewpoints) ? cat.viewpoints : [];
             const sortedPoints = [...points].sort((a, b) => b.value_score - a.value_score);
 
             return (

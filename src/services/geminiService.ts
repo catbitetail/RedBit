@@ -3,7 +3,7 @@ import { GoogleGenAI, Type, Modality, Chat, Schema } from "@google/genai";
 import { AnalysisResult, ReplySuggestion, TopicDraft } from "../types";
 import { Language } from "../translations";
 
-const apiKey = process.env.API_KEY || '';
+const apiKey = process.env.VITE_GEMINI_API_KEY || process.env.API_KEY || ''; // 兼容 VITE_ 前缀和旧的 API_KEY
 const ai = new GoogleGenAI({ apiKey });
 
 // CONFIGURATION: Set this to your local python backend if you have one running.
@@ -494,7 +494,7 @@ export const createChatSession = (contextData: AnalysisResult) => {
         `;
     }
     
-    contextString += `\nIf the user asks follow-up questions after the report, continue acting as the "Social Media Data Mining Expert".`;
+    contextString += `\nIf the user asks follow-up questions after the report, continue acting as the \"Social Media Data Mining Expert\".`;
 
     return ai.chats.create({
         model: 'gemini-3-flash-preview',
