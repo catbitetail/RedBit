@@ -499,16 +499,18 @@ const App: React.FC = () => {
                 {/* Actions Area */}
                 <div className="flex items-center gap-3">
                 
-                {/* Theme & Effect Toggles */}
-                <div className="hidden sm:flex items-center bg-white/50 dark:bg-slate-800/50 backdrop-blur rounded-full p-1 border border-slate-200/60 dark:border-slate-700/60 shadow-sm mr-2">
+                {/* Theme & Effect Toggles - 移动端也显示 */}
+                <div className="flex items-center bg-white/50 dark:bg-slate-800/50 backdrop-blur rounded-full p-1 border border-slate-200/60 dark:border-slate-700/60 shadow-sm mr-2">
+                     {/* 特效切换：只在桌面端显示 */}
                      <button
                         onClick={toggleEffect}
-                        className={`p-1.5 rounded-full transition-all duration-300 ${showEffect ? 'text-pink-500 bg-pink-50 dark:bg-pink-900/30' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                        className={`hidden sm:block p-1.5 rounded-full transition-all duration-300 ${showEffect ? 'text-pink-500 bg-pink-50 dark:bg-pink-900/30' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
                         title={theme === 'dark' ? "Let it snow" : "Scatter petals"}
                      >
                         {theme === 'dark' ? <Snowflake className="w-4 h-4" /> : <Flower className="w-4 h-4" />}
                      </button>
-                     <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                     <div className="hidden sm:block w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                     {/* 主题切换：移动端也显示 */}
                      <button 
                         onClick={toggleTheme}
                         className={`p-1.5 rounded-full transition-all duration-300 ${theme === 'dark' ? 'text-amber-300 bg-slate-700' : 'text-orange-400 bg-orange-50'}`}
@@ -520,7 +522,7 @@ const App: React.FC = () => {
 
                 {data && (
                     <div className="flex items-center gap-2 mr-2 animate-fade-in">
-                        {/* PDF Export Dropdown */}
+                        {/* PDF Export Dropdown - 桌面端显示 */}
                         <div className="relative" ref={pdfMenuRef}>
                             <button
                                 onClick={() => setShowPdfMenu(!showPdfMenu)}
@@ -573,6 +575,7 @@ const App: React.FC = () => {
                             )}
                         </div>
 
+                        {/* 导出 JSON - 桌面端显示 */}
                         <button
                             onClick={handleExportCurrent}
                             className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm transition-all"
@@ -582,16 +585,17 @@ const App: React.FC = () => {
                             <span>{t('export_btn')}</span>
                         </button>
 
+                        {/* 保存按钮 - 移动端简化显示 */}
                         <button 
                             onClick={handleSave}
-                            className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold shadow-sm transition-all duration-300 transform active:scale-95
+                            className={`flex items-center gap-2 px-3 sm:px-5 py-2 rounded-full text-sm font-bold shadow-sm transition-all duration-300 transform active:scale-95
                                 ${saveStatus === 'saved' 
                                     ? 'bg-green-500 text-white shadow-green-500/30' 
                                     : 'bg-slate-900 dark:bg-rose-600 text-white hover:bg-slate-800 dark:hover:bg-rose-700 hover:shadow-lg'}
                             `}
                         >
                             <Save className="w-4 h-4" />
-                            <span>{saveStatus === 'saved' ? t('saved_success') : t('save_btn')}</span>
+                            <span className="hidden sm:inline">{saveStatus === 'saved' ? t('saved_success') : t('save_btn')}</span>
                         </button>
                     </div>
                 )}
