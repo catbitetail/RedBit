@@ -5,8 +5,8 @@
     Please ensure 'redbit-full-light.png' and 'redbit-full-dark.png' exist in your 'public/' directory.
   -->
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="public/redbit-full-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="public/redbit-full-light.png">
+    <source media="(prefers-color-scheme: dark)" srcset="public/redbit-icon-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="public/redbit-icon-light.png">
     <img 
       alt="RedBit 赤兔" 
       src="public/redbit-icon-light.png" 
@@ -15,6 +15,7 @@
     >
   </picture>
 
+ 
   # RedBit 赤兔
   
   **日行千里，深挖红海**
