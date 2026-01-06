@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, Type, Modality, Chat } from "@google/genai";
+import { GoogleGenAI, Type, Modality, Chat, Schema } from "@google/genai";
 import { AnalysisResult, ReplySuggestion, TopicDraft } from "../types";
 import { Language } from "../translations";
 
@@ -10,13 +10,90 @@ const ai = new GoogleGenAI({ apiKey });
 // Use 127.0.0.1 instead of localhost to avoid Windows IPv6 resolution issues
 const BACKEND_API_URL = "http://127.0.0.1:5000/crawl"; 
 
+const analysisSchema: Schema = {
+    type: Type.OBJECT,
+    properties: {
+        short_title: { type: Type.STRING, description: "A punchy, concise, interesting title (max 15 chars)." },
+        summary: { type: Type.STRING, description: "Summary of content and atmosphere." },
+        sentiment_score: { type: Type.NUMBER, description: "0.0 to 1.0" },
+        emotions: {
+            type: Type.ARRAY,
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    label: { type: Type.STRING },
+                    score: { type: Type.NUMBER },
+                    type: { type: Type.STRING, description: "One of: Anxiety, Healing, Desire, Disappointment, Humblebrag, Resonance, Other" }
+                },
+                required: ['label', 'score', 'type']
+            }
+        },
+        key_insights: {
+            type: Type.ARRAY,
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    point: { type: Type.STRING },
+                    sentiment: { type: Type.STRING, description: "positive, negative, or neutral" },
+                    count: { type: Type.NUMBER },
+                    quote: { type: Type.STRING }
+                },
+                required: ['point', 'sentiment', 'count', 'quote']
+            }
+        },
+        class_rep: {
+            type: Type.OBJECT,
+            properties: {
+                controversies: { type: Type.ARRAY, items: { type: Type.STRING } },
+                info_gains: { type: Type.ARRAY, items: { type: Type.STRING } },
+                god_replies: { type: Type.ARRAY, items: { type: Type.STRING } }
+            },
+            required: ['controversies', 'info_gains', 'god_replies']
+        },
+        comprehensive_viewpoints: {
+            type: Type.ARRAY,
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    category_name: { type: Type.STRING },
+                    viewpoints: {
+                        type: Type.ARRAY,
+                        items: {
+                            type: Type.OBJECT,
+                            properties: {
+                                content: { type: Type.STRING },
+                                value_score: { type: Type.NUMBER },
+                                sentiment: { type: Type.STRING, description: "positive, negative, or neutral" }
+                            },
+                            required: ['content', 'value_score', 'sentiment']
+                        }
+                    }
+                },
+                required: ['category_name', 'viewpoints']
+            }
+        },
+        audience_profile: {
+            type: Type.OBJECT,
+            properties: {
+                description: { type: Type.STRING },
+                tags: { type: Type.ARRAY, items: { type: Type.STRING } }
+            },
+            required: ['description', 'tags']
+        },
+        next_topics: { type: Type.ARRAY, items: { type: Type.STRING } },
+        questions_asked: { type: Type.ARRAY, items: { type: Type.STRING } },
+        meme_alert: { type: Type.ARRAY, items: { type: Type.STRING } },
+        competitor_weaknesses: { type: Type.ARRAY, items: { type: Type.STRING } }
+    },
+    required: ['short_title', 'summary', 'sentiment_score', 'emotions', 'key_insights', 'class_rep', 'comprehensive_viewpoints', 'audience_profile', 'next_topics', 'questions_asked', 'meme_alert']
+};
+
 /**
  * ------------------------------------------------------------------
  * STRATEGY: Backend -> Hybrid -> Search Grounding
  * ------------------------------------------------------------------
  */
 
-// ... [Keep existing fetchFromBackend and fetchContentFromUrl unchanged] ...
 const fetchFromBackend = async (url: string, cookie?: string): Promise<string | null> => {
     if (!url) return null;
     try {
@@ -201,47 +278,10 @@ export const analyzeComments = async (input: string, language: Language = 'zh', 
       - **Exhaustiveness.** If the text contains 50 different specific observations, list all 50.
       - **Preserve Details.** Keep specific numbers, prices, brand names, locations, and specific user anecdotes.
       - **Categorize.** Group these points into relevant categories (e.g., "Product Quality", "Service", "Price/Value", "User Scenarios", "Specific Questions").
-      - It is acceptable if the list is long. The user wants to see ALL information provided by the comments.
       
       IMPORTANT: Output all text fields in ${targetLang}.
 
-      Return JSON matching this schema:
-      {
-        "short_title": "A punchy, concise, interesting title (max 15 chars) that summarizes the essence of the content in ${targetLang}. It should look like a headline.",
-        "summary": "Summary of content and atmosphere in ${targetLang}.",
-        "sentiment_score": 0.0 to 1.0,
-        "emotions": [
-           {"label": "Emotion Name in ${targetLang}", "score": 0-100, "type": "Anxiety|Healing|Desire|Disappointment|Humblebrag|Resonance|Other"}
-        ],
-        "key_insights": [
-          {"point": "Key point in ${targetLang}", "sentiment": "positive|negative", "count": 1, "quote": "Relevant text"}
-        ],
-        "class_rep": {
-          "controversies": ["Controversy 1 in ${targetLang}"],
-          "info_gains": ["Useful info 1 in ${targetLang}"],
-          "god_replies": ["Witty/Funny lines (keep original language)"]
-        },
-        "comprehensive_viewpoints": [
-          {
-            "category_name": "Category Name (e.g., Quality, Price, Experience) in ${targetLang}",
-            "viewpoints": [
-               {
-                 "content": "A detailed, specific viewpoint/fact extracted from text in ${targetLang}. (Do not generalize)",
-                 "value_score": 1-10 (10 being very insightful/unique, 1 being generic),
-                 "sentiment": "positive|negative|neutral"
-               }
-            ]
-          }
-        ],
-        "audience_profile": {
-          "description": "User persona description in ${targetLang}",
-          "tags": ["Tag1", "Tag2"]
-        },
-        "next_topics": ["Idea 1", "Idea 2"],
-        "questions_asked": ["Question 1", "Question 2"],
-        "meme_alert": ["Meme 1", "Slang 1"],
-        "competitor_weaknesses": ["Weakness 1"]
-      }
+      
 
       DATA TO ANALYZE:
       ${contentToAnalyze}
@@ -307,7 +347,8 @@ export const generateSmartReplies = async (comment: string, context: string, lan
       model: "gemini-3-flash-preview",
       contents: prompt,
       config: {
-        responseMimeType: "application/json"
+        responseMimeType: "application/json",
+        responseSchema: analysisSchema,
       }
     });
 

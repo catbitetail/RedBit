@@ -90,11 +90,29 @@ const App: React.FC = () => {
     try {
       const result = await analyzeComments(text, language, cookie);
       setData(result);
-      setShowTools(true);
+      
+      // UX Improvement: 
+      // 1. Only auto-open tools on large screens (>= 1024px) to avoid blocking the mobile view
+      // 2. Scroll to the report content so the user knows something happened
+      if (window.innerWidth >= 1024) {
+          setShowTools(true);
+      } else {
+          setShowTools(false);
+      }
+
+      // Small delay to allow DOM to render
+      setTimeout(() => {
+        const reportElement = document.getElementById('report-anchor');
+        if (reportElement) {
+            reportElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+
     } catch (err: any) {
       if (err.message === "URL_NOT_INDEXED") {
         alert(t('err_url_not_indexed'));
       } else {
+        console.error(err);
         alert(t('err_generic'));
       }
     } finally {
@@ -466,16 +484,7 @@ const App: React.FC = () => {
                     <div className="flex items-center gap-4 select-none group cursor-default">
                         <Logo />
                         
-                        {/* 
-                            NEW TYPOGRAPHY DESIGN
-                            Layout: [赤兔] (Left) [RedBit] (Right)
-                            Chinese: 'Noto Serif SC' Black (Songti) - text-2xl
-                            English: 'Fondamento' - Using custom class .font-edu
-                            Gradient: Light(Rose-Orange), Dark(Pink400-Indigo400) [Vibrant Premium]
-                            Weight: 'RedBit' -> Bold (Requested)
-                            Size: text-xl / md:text-2xl (Reduced size)
-                            Adjustments: translate-y-0.5 (Align higher)
-                        */}
+
                         <div className="hidden sm:flex items-baseline gap-3">
                              <span className="font-['Noto_Serif_SC'] text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-wide transform translate-y-0.5">
                                 赤兔
@@ -625,13 +634,7 @@ const App: React.FC = () => {
                     <Sparkles className="w-3 h-3" />
                     AI-Powered Insights
                 </div>
-                {/* 
-                  UPDATED HERO FONT: 
-                  - Noto Serif SC (Songti) 
-                  - font-black (Heaviest weight)
-                  - text-5xl / md:text-7xl (Set to 7XL as requested for desktop)
-                  - Gradient: Synced with Logo (Pink400 to Indigo400 in Dark Mode)
-                */}
+     
                 <h2 className="font-['Noto_Serif_SC'] text-5xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tight mb-8 leading-tight">
                     {t('hero_title_1')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-400 dark:from-pink-400 dark:to-indigo-400">{t('hero_title_2')}</span>
                 </h2>
@@ -646,6 +649,8 @@ const App: React.FC = () => {
           <div className="max-w-4xl mx-auto">
               <AnalysisInput onAnalyze={handleAnalyze} isAnalyzing={isAnalyzing} />
           </div>
+          {/* Anchor for auto-scroll */}
+          <div id="report-anchor" className="h-1" />
 
           {data && (
             <div id="report-content" className="space-y-8 animate-fade-in-up mt-12 bg-transparent">
