@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RedBit 赤兔 - 小红书数据挖掘引擎</title>
+  <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <!-- NEW FONTS: Fondamento (Calligraphic) & Noto Serif SC (Heavy Songti) -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fondamento:ital,wght@0,400;1,400&family=Noto+Serif+SC:wght@700;900&display=swap"
+    rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      /* Default Light */
+      background-color: #FAFAFA;
+      color: #1F2937;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: background-color 0.5s ease, color 0.5s ease;
+    }
+
+    /* Updated class to use the new Fondamento font */
+    .font-edu {
+      font-family: 'Fondamento', cursive;
+    }
+
+    /* Dark Mode Override handled by tailwind 'dark' class on html */
+    .dark body {
+      background-color: #0F172A;
+      /* Slate 900 */
+      color: #F1F5F9;
+    }
+
+    /* Glassmorphism Utilities */
+    .glass {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .dark .glass {
+      background: rgba(15, 23, 42, 0.85);
+      /* Dark Slate Glass */
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Elegant Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #E5E7EB;
+      border-radius: 10px;
+      transition: background 0.2s;
+    }
+
+    .dark ::-webkit-scrollbar-thumb {
+      background: #334155;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #D1D5DB;
+    }
+
+    .dark ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    /* Animations */
+    @keyframes float {
+      0% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-5px);
+      }
+
+      100% {
+        transform: translateY(0px);
+      }
+    }
+
+    .animate-float {
+      animation: float 6s ease-in-out infinite;
+    }
+  </style>
+
+</head>
+
+<body>
+  <div id="root"></div>
+  <!-- 必须加上这一行，否则页面是空的！ -->
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>
