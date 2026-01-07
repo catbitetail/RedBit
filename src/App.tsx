@@ -524,26 +524,26 @@ const App: React.FC = () => {
                         {/* Actions Area */}
                         <div className="flex items-center gap-3">
 
-                            {/* Theme & Effect Toggles - 移动端也显示 */}
-                            <div className="flex items-center bg-white/50 dark:bg-slate-800/50 backdrop-blur rounded-full p-1 border border-slate-200/60 dark:border-slate-700/60 shadow-sm mr-3 sm:mr-2">
-                                {/* 特效切换：移动端也显示 */}
-                                <button
-                                    onClick={toggleEffect}
-                                    className={`p-1.5 rounded-full transition-all duration-300 ${showEffect ? 'text-pink-500 bg-pink-50 dark:bg-pink-900/30' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
-                                    title={theme === 'dark' ? "Let it snow" : "Scatter petals"}
-                                >
-                                    {theme === 'dark' ? <Snowflake className="w-4 h-4" /> : <Flower className="w-4 h-4" />}
-                                </button>
-                                <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                                {/* 主题切换：移动端也显示 */}
-                                <button
-                                    onClick={toggleTheme}
-                                    className={`p-1.5 rounded-full transition-all duration-300 ${theme === 'dark' ? 'text-amber-300 bg-slate-700' : 'text-orange-400 bg-orange-50'}`}
-                                    title="Toggle Dark Mode"
-                                >
-                                    {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-                                </button>
-                            </div>
+                            {/* Theme & Effect Toggles - 初始界面：位置不变 */}
+                            {!data && (
+                                <div className="flex items-center bg-white/50 dark:bg-slate-800/50 backdrop-blur rounded-full p-1 border border-slate-200/60 dark:border-slate-700/60 shadow-sm mr-2">
+                                    <button
+                                        onClick={toggleEffect}
+                                        className={`p-1.5 rounded-full transition-all duration-300 ${showEffect ? 'text-pink-500 bg-pink-50 dark:bg-pink-900/30' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                                        title={theme === 'dark' ? "Let it snow" : "Scatter petals"}
+                                    >
+                                        {theme === 'dark' ? <Snowflake className="w-4 h-4" /> : <Flower className="w-4 h-4" />}
+                                    </button>
+                                    <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                                    <button
+                                        onClick={toggleTheme}
+                                        className={`p-1.5 rounded-full transition-all duration-300 ${theme === 'dark' ? 'text-amber-300 bg-slate-700' : 'text-orange-400 bg-orange-50'}`}
+                                        title="Toggle Dark Mode"
+                                    >
+                                        {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                                    </button>
+                                </div>
+                            )}
 
                             {data && (
                                 <div className="flex items-center gap-2 mr-2 animate-fade-in">
@@ -621,6 +621,27 @@ const App: React.FC = () => {
                                     >
                                         <Save className="w-4 h-4" />
                                         <span className="hidden sm:inline">{saveStatus === 'saved' ? t('saved_success') : t('save_btn')}</span>
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Theme & Effect Toggles - 有报告时：手机端移动到保存键附近，桌面端隐藏 */}
+                            {data && (
+                                <div className="md:hidden flex items-center bg-white/50 dark:bg-slate-800/50 backdrop-blur rounded-full p-1 border border-slate-200/60 dark:border-slate-700/60 shadow-sm mr-2">
+                                    <button
+                                        onClick={toggleEffect}
+                                        className={`p-1.5 rounded-full transition-all duration-300 ${showEffect ? 'text-pink-500 bg-pink-50 dark:bg-pink-900/30' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                                        title={theme === 'dark' ? "Let it snow" : "Scatter petals"}
+                                    >
+                                        {theme === 'dark' ? <Snowflake className="w-4 h-4" /> : <Flower className="w-4 h-4" />}
+                                    </button>
+                                    <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                                    <button
+                                        onClick={toggleTheme}
+                                        className={`p-1.5 rounded-full transition-all duration-300 ${theme === 'dark' ? 'text-amber-300 bg-slate-700' : 'text-orange-400 bg-orange-50'}`}
+                                        title="Toggle Dark Mode"
+                                    >
+                                        {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
                                     </button>
                                 </div>
                             )}
