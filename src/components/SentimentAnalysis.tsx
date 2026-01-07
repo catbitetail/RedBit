@@ -31,11 +31,11 @@ const SentimentAnalysis: React.FC<Props> = ({ data }) => {
   const gridColor = theme === 'dark' ? '#334155' : '#e5e7eb';
   const bgColor = theme === 'dark' ? '#1e293b' : '#ffffff';
   const tooltipStyle = {
-      backgroundColor: bgColor,
-      color: axisColor,
-      borderRadius: '8px', 
-      border: `1px solid ${gridColor}`, 
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' 
+    backgroundColor: bgColor,
+    color: axisColor,
+    borderRadius: '8px',
+    border: `1px solid ${gridColor}`,
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
   };
 
   return (
@@ -60,10 +60,10 @@ const SentimentAnalysis: React.FC<Props> = ({ data }) => {
           </ResponsiveContainer>
         </div>
         <div className="mt-4 text-center">
-            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('sentiment_score')} </span>
-            <span className={`text-lg font-bold ${data.sentiment_score > 0.6 ? 'text-green-500' : data.sentiment_score < 0.4 ? 'text-red-500' : 'text-yellow-500'}`}>
-                {(data.sentiment_score * 100).toFixed(0)}/100
-            </span>
+          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('sentiment_score')} </span>
+          <span className={`text-lg font-bold ${data.sentiment_score > 0.6 ? 'text-green-500' : data.sentiment_score < 0.4 ? 'text-red-500' : 'text-yellow-500'}`}>
+            {(data.sentiment_score * 100).toFixed(0)}/100
+          </span>
         </div>
       </div>
 
@@ -74,13 +74,13 @@ const SentimentAnalysis: React.FC<Props> = ({ data }) => {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart layout="vertical" data={sortedEmotions.slice(0, 5)} margin={{ left: 20 }}>
               <XAxis type="number" hide />
-              <YAxis 
-                type="category" 
-                dataKey="label" 
-                width={80} 
-                tick={{ fontSize: 12, fill: axisColor }} 
+              <YAxis
+                type="category"
+                dataKey="label"
+                width={80}
+                tick={{ fontSize: 12, fill: axisColor }}
               />
-              <Tooltip 
+              <Tooltip
                 cursor={{ fill: 'transparent' }}
                 contentStyle={tooltipStyle}
               />
@@ -93,12 +93,12 @@ const SentimentAnalysis: React.FC<Props> = ({ data }) => {
           </ResponsiveContainer>
         </div>
         <div className="flex flex-wrap gap-2 mt-4 justify-center">
-            {sortedEmotions.slice(0, 5).map(e => (
-                <span key={e.label} className="text-xs px-2 py-1 rounded-full bg-gray-50 dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-slate-700">
-                    <span className="w-2 h-2 rounded-full inline-block mr-1" style={{backgroundColor: getEmotionColor(e.type)}}></span>
-                    {e.label}
-                </span>
-            ))}
+          {sortedEmotions.slice(0, 5).map(e => (
+            <span key={e.label} className="text-xs px-2 py-1 rounded-full bg-gray-50 dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-slate-700">
+              <span className="w-2 h-2 rounded-full inline-block mr-1" style={{ backgroundColor: getEmotionColor(e.type) }}></span>
+              {e.label}
+            </span>
+          ))}
         </div>
       </div>
     </div>
