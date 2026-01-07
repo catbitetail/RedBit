@@ -8,84 +8,108 @@ const ai = new GoogleGenAI({ apiKey });
 
 // CONFIGURATION: Set this to your local python backend if you have one running.
 // Use 127.0.0.1 instead of localhost to avoid Windows IPv6 resolution issues
-const BACKEND_API_URL = "http://127.0.0.1:5000/crawl"; 
+const BACKEND_API_URL = "http://127.0.0.1:5000/crawl";
 
 const analysisSchema: Schema = {
-    type: Type.OBJECT,
-    properties: {
-        short_title: { type: Type.STRING, description: "A punchy, concise, interesting title (max 15 chars)." },
-        summary: { type: Type.STRING, description: "Summary of content and atmosphere." },
-        sentiment_score: { type: Type.NUMBER, description: "0.0 to 1.0" },
-        emotions: {
-            type: Type.ARRAY,
-            items: {
-                type: Type.OBJECT,
-                properties: {
-                    label: { type: Type.STRING },
-                    score: { type: Type.NUMBER },
-                    type: { type: Type.STRING, description: "One of: Anxiety, Healing, Desire, Disappointment, Humblebrag, Resonance, Other" }
-                },
-                required: ['label', 'score', 'type']
-            }
+  type: Type.OBJECT,
+  properties: {
+    short_title: { type: Type.STRING, description: "A punchy, concise, interesting title (max 15 chars)." },
+    summary: { type: Type.STRING, description: "Summary of content and atmosphere." },
+    sentiment_score: { type: Type.NUMBER, description: "0.0 to 1.0" },
+    emotions: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          label: { type: Type.STRING },
+          score: { type: Type.NUMBER },
+          type: { type: Type.STRING, description: "One of: Anxiety, Healing, Desire, Disappointment, Humblebrag, Resonance, Other" }
         },
-        key_insights: {
-            type: Type.ARRAY,
-            items: {
-                type: Type.OBJECT,
-                properties: {
-                    point: { type: Type.STRING },
-                    sentiment: { type: Type.STRING, description: "positive, negative, or neutral" },
-                    count: { type: Type.NUMBER },
-                    quote: { type: Type.STRING }
-                },
-                required: ['point', 'sentiment', 'count', 'quote']
-            }
-        },
-        class_rep: {
-            type: Type.OBJECT,
-            properties: {
-                controversies: { type: Type.ARRAY, items: { type: Type.STRING } },
-                info_gains: { type: Type.ARRAY, items: { type: Type.STRING } },
-                god_replies: { type: Type.ARRAY, items: { type: Type.STRING } }
-            },
-            required: ['controversies', 'info_gains', 'god_replies']
-        },
-        comprehensive_viewpoints: {
-            type: Type.ARRAY,
-            items: {
-                type: Type.OBJECT,
-                properties: {
-                    category_name: { type: Type.STRING },
-                    viewpoints: {
-                        type: Type.ARRAY,
-                        items: {
-                            type: Type.OBJECT,
-                            properties: {
-                                content: { type: Type.STRING },
-                                value_score: { type: Type.NUMBER },
-                                sentiment: { type: Type.STRING, description: "positive, negative, or neutral" }
-                            },
-                            required: ['content', 'value_score', 'sentiment']
-                        }
-                    }
-                },
-                required: ['category_name', 'viewpoints']
-            }
-        },
-        audience_profile: {
-            type: Type.OBJECT,
-            properties: {
-                description: { type: Type.STRING },
-                tags: { type: Type.ARRAY, items: { type: Type.STRING } }
-            },
-            required: ['description', 'tags']
-        },
-        next_topics: { type: Type.ARRAY, items: { type: Type.STRING } },
-        questions_asked: { type: Type.ARRAY, items: { type: Type.STRING } },
-        meme_alert: { type: Type.ARRAY, items: { type: Type.STRING } },
-        competitor_weaknesses: { type: Type.ARRAY, items: { type: Type.STRING } }
+        required: ['label', 'score', 'type']
+      }
     },
-    required: ['short_title', 'summary', 'sentiment_score', 'emotions', 'key_insights', 'class_rep', 'comprehensive_viewpoints', 'audience_profile', 'next_topics', 'questions_asked', 'meme_alert']
+    key_insights: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          point: { type: Type.STRING },
+          sentiment: { type: Type.STRING, description: "positive, negative, or neutral" },
+          count: { type: Type.NUMBER },
+          quote: { type: Type.STRING }
+        },
+        required: ['point', 'sentiment', 'count', 'quote']
+      }
+    },
+    class_rep: {
+      type: Type.OBJECT,
+      properties: {
+        controversies: { type: Type.ARRAY, items: { type: Type.STRING } },
+        info_gains: { type: Type.ARRAY, items: { type: Type.STRING } },
+        god_replies: { type: Type.ARRAY, items: { type: Type.STRING } }
+      },
+      required: ['controversies', 'info_gains', 'god_replies']
+    },
+    comprehensive_viewpoints: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          category_name: { type: Type.STRING },
+          viewpoints: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                content: { type: Type.STRING },
+                value_score: { type: Type.NUMBER },
+                sentiment: { type: Type.STRING, description: "positive, negative, or neutral" }
+              },
+              required: ['content', 'value_score', 'sentiment']
+            }
+          }
+        },
+        required: ['category_name', 'viewpoints']
+      }
+    },
+    audience_profile: {
+      type: Type.OBJECT,
+      properties: {
+        description: { type: Type.STRING },
+        tags: { type: Type.ARRAY, items: { type: Type.STRING } }
+      },
+      required: ['description', 'tags']
+    },
+    next_topics: { type: Type.ARRAY, items: { type: Type.STRING } },
+    questions_asked: { type: Type.ARRAY, items: { type: Type.STRING } },
+    meme_alert: { type: Type.ARRAY, items: { type: Type.STRING } },
+    competitor_weaknesses: { type: Type.ARRAY, items: { type: Type.STRING } }
+  },
+  required: ['short_title', 'summary', 'sentiment_score', 'emotions', 'key_insights', 'class_rep', 'comprehensive_viewpoints', 'audience_profile', 'next_topics', 'questions_asked', 'meme_alert']
+};
+
+// 辅助函数：安全生成 Key Viewpoints 字符串
+const generateKeyViewpointsString = (viewpoints: any[]): string => {
+  if (!Array.isArray(viewpoints) || viewpoints.length === 0) {
+    return "No viewpoints available";
+  }
+
+  return viewpoints
+    .filter(c => c && typeof c === 'object')
+    .map(c => {
+      const categoryName = (c.category_name && typeof c.category_name === 'string') ? c.category_name : 'Unknown Category';
+      let viewpointsList = '';
+
+      if (Array.isArray(c.viewpoints)) {
+        viewpointsList = c.viewpoints
+          .filter(v => v && typeof v === 'object' && typeof v.content === 'string')
+          .map(v => v.content)
+          .join(', ');
+      }
+
+      return `- ${categoryName}: ${viewpointsList}`;
+    })
+    .join('\n');
 };
 
 /**
@@ -95,48 +119,48 @@ const analysisSchema: Schema = {
  */
 
 const fetchFromBackend = async (url: string, cookie?: string): Promise<string | null> => {
-    if (!url) return null;
-    try {
-        console.log(`Attempting to connect to backend: ${BACKEND_API_URL}`);
-        
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); 
+  if (!url) return null;
+  try {
+    console.log(`Attempting to connect to backend: ${BACKEND_API_URL}`);
 
-        const response = await fetch(BACKEND_API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ url, cookie }),
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-        if (!response.ok) {
-            throw new Error(`Backend Error: ${response.statusText}`);
-        }
+    const response = await fetch(BACKEND_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url, cookie }),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
 
-        const data = await response.json();
-        
-        if (data && (data.title || data.desc || data.comments)) {
-            const commentsText = Array.isArray(data.comments) 
-                ? data.comments.join('\n') 
-                : JSON.stringify(data.comments);
-            
-            return `
+    if (!response.ok) {
+      throw new Error(`Backend Error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    if (data && (data.title || data.desc || data.comments)) {
+      const commentsText = Array.isArray(data.comments)
+        ? data.comments.join('\n')
+        : JSON.stringify(data.comments);
+
+      return `
             [SOURCE: RAW DATA FROM BACKEND CRAWLER]
             Title: ${data.title || 'N/A'}
             Description: ${data.desc || 'N/A'}
             Comments:
             ${commentsText}
             `;
-        }
-        return null;
-
-    } catch (error) {
-        console.warn("Backend fetch failed (falling back to frontend search):", error);
-        return null;
     }
+    return null;
+
+  } catch (error) {
+    console.warn("Backend fetch failed (falling back to frontend search):", error);
+    return null;
+  }
 };
 
 const fetchContentFromUrl = async (url: string, cookie?: string): Promise<string> => {
@@ -199,61 +223,61 @@ export const analyzeComments = async (input: string, language: Language = 'zh', 
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const urls = input.match(urlRegex);
     const hasUrl = !!urls && urls.length > 0;
-    
+
     const textWithoutUrl = input.replace(urlRegex, '').trim();
-    const hasSignificantText = textWithoutUrl.length > 50; 
+    const hasSignificantText = textWithoutUrl.length > 50;
 
     let contentToAnalyze = input;
     let backendData: string | null = null;
 
     if (hasUrl) {
-        const targetUrl = urls![0];
-        if (cookie || targetUrl) {
-            backendData = await fetchFromBackend(targetUrl, cookie);
-        }
+      const targetUrl = urls![0];
+      if (cookie || targetUrl) {
+        backendData = await fetchFromBackend(targetUrl, cookie);
+      }
 
-        if (backendData) {
-             if (hasSignificantText) {
-                contentToAnalyze = `
+      if (backendData) {
+        if (hasSignificantText) {
+          contentToAnalyze = `
                 === USER PROVIDED TEXT (PRIORITY) ===
                 ${textWithoutUrl}
 
                 === BACKEND CRAWLER DATA (SUPPLEMENTARY) ===
                 ${backendData}
                 `;
-             } else {
-                contentToAnalyze = backendData;
-             }
         } else {
-             if (hasSignificantText) {
-                try {
-                    const fetched = await fetchContentFromUrl(targetUrl, cookie);
-                    if (fetched && fetched.length > 50) {
-                        contentToAnalyze = `
+          contentToAnalyze = backendData;
+        }
+      } else {
+        if (hasSignificantText) {
+          try {
+            const fetched = await fetchContentFromUrl(targetUrl, cookie);
+            if (fetched && fetched.length > 50) {
+              contentToAnalyze = `
                         === USER PROVIDED TEXT (PRIORITY) ===
                         ${textWithoutUrl}
                         
                         === SEARCH RESULTS (SUPPLEMENTARY) ===
                         ${fetched}`;
-                    } else {
-                         contentToAnalyze = textWithoutUrl;
-                    }
-                } catch (e) {
-                    console.warn("Search grounding failed, falling back to raw user text");
-                    contentToAnalyze = textWithoutUrl;
-                }
             } else {
-                try {
-                    const urlInfo = await fetchContentFromUrl(targetUrl, cookie);
-                    contentToAnalyze = `(Source: Content found via Search for ${targetUrl})\n${urlInfo}`;
-                } catch (e: any) {
-                     if (e.message === "CONTENT_NOT_INDEXED") {
-                        throw new Error("URL_NOT_INDEXED");
-                     }
-                     throw new Error("Failed to fetch URL content.");
-                }
+              contentToAnalyze = textWithoutUrl;
             }
+          } catch (e) {
+            console.warn("Search grounding failed, falling back to raw user text");
+            contentToAnalyze = textWithoutUrl;
+          }
+        } else {
+          try {
+            const urlInfo = await fetchContentFromUrl(targetUrl, cookie);
+            contentToAnalyze = `(Source: Content found via Search for ${targetUrl})\n${urlInfo}`;
+          } catch (e: any) {
+            if (e.message === "CONTENT_NOT_INDEXED") {
+              throw new Error("URL_NOT_INDEXED");
+            }
+            throw new Error("Failed to fetch URL content.");
+          }
         }
+      }
     }
 
     const languageMap = {
@@ -288,7 +312,7 @@ export const analyzeComments = async (input: string, language: Language = 'zh', 
     `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview", 
+      model: "gemini-3-flash-preview",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -297,18 +321,18 @@ export const analyzeComments = async (input: string, language: Language = 'zh', 
 
     const jsonText = response.text || "{}";
     const result = JSON.parse(jsonText) as AnalysisResult;
-    
+
     // INJECT RAW CONTENT into the result so it can be saved and used for Q&A later
     result.raw_content = contentToAnalyze;
-    
+
     return result;
   } catch (error: any) {
     console.error("Analysis Error:", error);
     if (error.message === "URL_NOT_INDEXED") {
-        throw error;
+      throw error;
     }
     if (input.trim().length < 50 && input.trim().match(/^https?:\/\//)) {
-        throw new Error("Unable to retrieve content. Please try pasting text/image.");
+      throw new Error("Unable to retrieve content. Please try pasting text/image.");
     }
     throw new Error("Failed to analyze comments. (API Error)");
   }
@@ -348,7 +372,7 @@ export const generateSmartReplies = async (comment: string, context: string, lan
       contents: prompt,
       config: {
         responseMimeType: "application/json",
-        responseSchema: analysisSchema,
+        // 修复：移除不匹配的 responseSchema，因为返回的是简单数组而不是复杂对象
       }
     });
 
@@ -361,16 +385,16 @@ export const generateSmartReplies = async (comment: string, context: string, lan
 
 // 4. Topic Draft Generator
 export const generateTopicDraft = async (topic: string, contextSummary: string, language: Language = 'zh'): Promise<TopicDraft> => {
-    try {
-        const languageMap = {
-            en: "English",
-            zh: "Simplified Chinese",
-            ja: "Japanese",
-            ko: "Korean"
-        };
-        const targetLang = languageMap[language] || languageMap['zh'];
+  try {
+    const languageMap = {
+      en: "English",
+      zh: "Simplified Chinese",
+      ja: "Japanese",
+      ko: "Korean"
+    };
+    const targetLang = languageMap[language] || languageMap['zh'];
 
-        const prompt = `
+    const prompt = `
           You are a top-tier Xiaohongshu (Little Red Book) content creator.
           Task: Write a complete, viral-style XHS note based on the following topic and context.
           Topic: ${topic}
@@ -379,19 +403,19 @@ export const generateTopicDraft = async (topic: string, contextSummary: string, 
           Return JSON: { "title": "The Title", "content": "The full body text including hashtags." }
         `;
 
-        const response = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
-            contents: prompt,
-            config: {
-                responseMimeType: "application/json"
-            }
-        });
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json"
+      }
+    });
 
-        return JSON.parse(response.text || "{}");
-    } catch (error) {
-        console.error("Draft Gen Error:", error);
-        throw new Error("Failed to generate draft");
-    }
+    return JSON.parse(response.text || "{}");
+  } catch (error) {
+    console.error("Draft Gen Error:", error);
+    throw new Error("Failed to generate draft");
+  }
 };
 
 // 5. TTS Service
@@ -428,14 +452,14 @@ export const generateSpeech = async (text: string): Promise<ArrayBuffer> => {
 
 // 6. Create Chat Session
 export const createChatSession = (contextData: AnalysisResult) => {
-    // Safe access with defaults
-    const viewpoints = contextData.comprehensive_viewpoints || [];
-    const emotions = contextData.emotions || [];
-    const audienceDesc = contextData.audience_profile?.description || "Unknown";
-    const summary = contextData.summary || "No summary available";
+  // Safe access with defaults
+  const viewpoints = contextData.comprehensive_viewpoints || [];
+  const emotions = contextData.emotions || [];
+  const audienceDesc = contextData.audience_profile?.description || "Unknown";
+  const summary = contextData.summary || "No summary available";
 
-    // --- EXPERT PERSONA DEFINITION (From User Request) ---
-    const EXPERT_PERSONA = `
+  // --- EXPERT PERSONA DEFINITION (From User Request) ---
+  const EXPERT_PERSONA = `
 # Role (角色设定)
 你是一位拥有 10 年经验的“新媒体数据挖掘专家”与“资深产品经理”。你擅长从杂乱的社交媒体碎片信息中“深挖”用户真实痛点，并具备敏锐的商业嗅觉。
 
@@ -470,12 +494,12 @@ export const createChatSession = (contextData: AnalysisResult) => {
 在生成报告前，请先在内心把所有评论通读一遍，进行分类聚类，排除无效的水军评论，再开始撰写报告。
 `;
 
-    // Combine Persona with Data
-    let contextString = `${EXPERT_PERSONA}\n\n`;
+  // Combine Persona with Data
+  let contextString = `${EXPERT_PERSONA}\n\n`;
 
-    // INJECT RAW CONTENT IF AVAILABLE (Backward compatibility: check if it exists)
-    if (contextData.raw_content) {
-        contextString += `
+  // INJECT RAW CONTENT IF AVAILABLE (Backward compatibility: check if it exists)
+  if (contextData.raw_content) {
+    contextString += `
         # DATA PROVIDED FOR ANALYSIS (原始数据)
         === START OF COMMENTS / POST DATA ===
         ${contextData.raw_content}
@@ -483,23 +507,23 @@ export const createChatSession = (contextData: AnalysisResult) => {
         
         Note: The above is the raw user-provided content. Please strictly base your report on this data.
         `;
-    } else {
-        contextString += `
+  } else {
+    contextString += `
         # DATA PROVIDED FOR ANALYSIS (Summary Data only)
         Note: Raw content is not available for this report. Please base your expert report on the following structured summary:
         
         Summary: ${summary}
         Key Viewpoints:
-        ${viewpoints.map(c => `- ${c.category_name}: ${c.viewpoints ? c.viewpoints.map(v => v.content).join(', ') : ''}`).join('\n')}
+        ${generateKeyViewpointsString(viewpoints)}
         `;
-    }
-    
-    contextString += `\nIf the user asks follow-up questions after the report, continue acting as the \"Social Media Data Mining Expert\".`;
+  }
 
-    return ai.chats.create({
-        model: 'gemini-3-flash-preview',
-        config: {
-            systemInstruction: contextString
-        }
-    });
+  contextString += `\nIf the user asks follow-up questions after the report, continue acting as the \"Social Media Data Mining Expert\".`;
+
+  return ai.chats.create({
+    model: 'gemini-3-flash-preview',
+    config: {
+      systemInstruction: contextString
+    }
+  });
 };
