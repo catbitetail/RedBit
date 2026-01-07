@@ -136,23 +136,17 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
             let response: GenerateContentResponse;
 
             if (userImages.length > 0) {
-                // TODO: 修复 Gemini SDK 多模态 API 调用
-                // 当前 SDK 版本可能不支持 content 格式，需要查阅文档
-                alert("图片功能暂时不可用，正在修复中...");
-                setIsSending(false);
-                return;
-                // const content = {
-                //   parts: [
-                //     { text: userMsg },
-                //     ...userImages.map(img => ({
-                //         inlineData: {
-                //             mimeType: 'image/jpeg',
-                //             data: img
-                //         }
-                //     }))
-                //   ]
-                // };
-                // response = await chatSessionRef.current.sendMessage({ content });
+                const parts = [
+                    { text: userMsg },
+                    ...userImages.map(img => ({
+                        inlineData: {
+                            mimeType: 'image/jpeg',
+                            data: img
+                        }
+                    }))
+                ];
+                // Fix: use 'message' parameter instead of 'content' for multimodal input
+                response = await chatSessionRef.current.sendMessage({ message: parts });
             } else {
                 // Text Only Request
                 response = await chatSessionRef.current.sendMessage({ message: userMsg });

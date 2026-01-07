@@ -169,6 +169,30 @@ const App: React.FC = () => {
         }
     };
 
+    // Handle data updates from ChatAndNotes component
+    // When AI generates initial_chat_response, sync it to both state and archives
+    const handleDataUpdate = (updatedData: AnalysisResult) => {
+        setData(updatedData);
+
+        // If this report is already saved (has currentReportId), update the archive too
+        if (currentReportId) {
+            const newArchives = archives.map(report => {
+                if (report.id === currentReportId) {
+                    return {
+                        ...report,
+                        data: updatedData,
+                        timestamp: Date.now() // Update timestamp to reflect changes
+                    };
+                }
+                return report;
+            });
+
+            newArchives.sort((a, b) => b.timestamp - a.timestamp);
+            setArchives(newArchives);
+            localStorage.setItem('xhs_miner_archives', JSON.stringify(newArchives));
+        }
+    };
+
     // --- Export / Import Logic ---
 
     const downloadJSON = (content: any, filename: string) => {
@@ -462,7 +486,7 @@ const App: React.FC = () => {
                         analysisData={data}
                         notes={notes}
                         onNotesChange={setNotes}
-                        onDataUpdate={setData} // Pass setData to update the report with generated chat content
+                        onDataUpdate={handleDataUpdate} // Use handleDataUpdate to sync both state and archives
                         onClose={() => setShowTools(false)}
                     />
                 )}
