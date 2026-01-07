@@ -29,6 +29,12 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const chatFileInputRef = useRef<HTMLInputElement>(null);
 
+    // Track the latest analysisData to avoid stale closures
+    const analysisDataRef = useRef(analysisData);
+    useEffect(() => {
+        analysisDataRef.current = analysisData;
+    }, [analysisData]);
+
     const [isNotePreview, setIsNotePreview] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -58,8 +64,10 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
                     setMessages([{ role: 'model', text: text }]);
 
                     // Save this to the parent data structure so we don't regenerate next time
+                    // Use ref to get the latest data, avoiding stale closure
+                    const currentData = analysisDataRef.current;
                     onDataUpdate({
-                        ...analysisData,
+                        ...currentData,
                         initial_chat_response: text
                     });
                 }

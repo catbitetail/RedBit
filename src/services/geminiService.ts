@@ -288,7 +288,8 @@ export const analyzeComments = async (input: string, language: Language = 'zh', 
     const hasUrl = !!urls && urls.length > 0;
 
     const textWithoutUrl = input.replace(urlRegex, '').trim();
-    const hasSignificantText = textWithoutUrl.length > 50;
+    // Keep textWithoutUrl for fallback, even if short
+    const hasSignificantText = textWithoutUrl.length > 20; // Lowered threshold slightly
 
     let contentToAnalyze = input;
     let backendData: string | null = null;
@@ -386,7 +387,13 @@ export const analyzeComments = async (input: string, language: Language = 'zh', 
     const result = JSON.parse(jsonText) as AnalysisResult;
 
     // INJECT RAW CONTENT into the result so it can be saved and used for Q&A later
-    result.raw_content = contentToAnalyze;
+    // Fallback: If contentToAnalyze is disappointingly short but input was long, use input.
+    // This protects against logic bugs where we might have accidentally stripped everything.
+    const finalRawContent = (contentToAnalyze.length < input.length / 2 && input.length > 200)
+      ? input
+      : contentToAnalyze;
+
+    result.raw_content = finalRawContent;
 
     return result;
   } catch (error: any) {
