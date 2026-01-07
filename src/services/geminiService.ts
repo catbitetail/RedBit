@@ -1,14 +1,77 @@
 
-import { GoogleGenAI, Type, Modality, Chat, Schema } from "@google/genai";
 import { AnalysisResult, ReplySuggestion, TopicDraft } from "../types";
 import { Language } from "../translations";
+import { Type, Schema } from "@google/genai";
 
-const apiKey = process.env.VITE_GEMINI_API_KEY || process.env.API_KEY || ''; // 兼容 VITE_ 前缀和旧的 API_KEY
-const ai = new GoogleGenAI({ apiKey });
+// ===============================================
+// 配置：使用 Cloudflare Functions 代理
+// ===============================================
+const USE_CLOUDFLARE_PROXY = true; // 生产环境设置为 true
+const GEMINI_PROXY_URL = "/api/gemini"; // Cloudflare Functions 代理路径
+const CHAT_PROXY_URL = "/api/chat"; // 聊天代理路径
 
 // CONFIGURATION: Set this to your local python backend if you have one running.
 // Use 127.0.0.1 instead of localhost to avoid Windows IPv6 resolution issues
 const BACKEND_API_URL = "http://127.0.0.1:5000/crawl";
+
+// ===============================================
+// 代理 API 调用辅助函数
+// ===============================================
+
+/**
+ * 调用 Cloudflare Functions 代理
+ */
+const callGeminiProxy = async (model: string, contents: any, config?: any): Promise<any> => {
+  if (!USE_CLOUDFLARE_PROXY) {
+    throw new Error("Proxy is disabled. Please enable USE_CLOUDFLARE_PROXY.");
+  }
+
+  const response = await fetch(GEMINI_PROXY_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ model, contents, config }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`Proxy Error: ${errorData.error || response.statusText}`);
+  }
+
+  const data = await response.json();
+
+  // 返回包装的响应，模拟 Google GenAI SDK 的结构
+  return {
+    text: data.candidates?.[0]?.content?.parts?.[0]?.text || "",
+    candidates: data.candidates,
+    raw: data
+  };
+};
+
+/**
+ * 调用聊天代理 API
+ */
+const callChatProxy = async (action: string, model: string, config?: any, message?: string): Promise<any> => {
+  if (!USE_CLOUDFLARE_PROXY) {
+    throw new Error("Proxy is disabled. Please enable USE_CLOUDFLARE_PROXY.");
+  }
+
+  const response = await fetch(CHAT_PROXY_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ action, model, config, message }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`Chat Proxy Error: ${errorData.error || response.statusText}`);
+  }
+
+  return await response.json();
+};
 
 const analysisSchema: Schema = {
   type: Type.OBJECT,
@@ -178,13 +241,13 @@ const fetchContentFromUrl = async (url: string, cookie?: string): Promise<string
       5. CRITICAL: If you absolutely cannot find the content (e.g. only login page), return "ERROR_CONTENT_UNAVAILABLE". Do not hallucinate a post.
     `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
-      config: {
+    const response = await callGeminiProxy(
+      "gemini-3-flash-preview",
+      prompt,
+      {
         tools: [{ googleSearch: {} }]
       }
-    });
+    );
 
     const text = response.text || "";
     if (text.includes("ERROR_CONTENT_UNAVAILABLE")) {
@@ -201,15 +264,15 @@ const fetchContentFromUrl = async (url: string, cookie?: string): Promise<string
 // 1. OCR / Extract Text from Image
 export const extractTextFromImage = async (base64Image: string): Promise<string> => {
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: {
+    const response = await callGeminiProxy(
+      "gemini-3-flash-preview",
+      {
         parts: [
           { inlineData: { mimeType: "image/png", data: base64Image } },
           { text: "Extract all the comment text from this screenshot. Ignore UI elements like timestamps or buttons. Just return the raw text of the comments line by line." }
         ]
       }
-    });
+    );
     return response.text || "";
   } catch (error) {
     console.error("OCR Error:", error);
@@ -311,13 +374,13 @@ export const analyzeComments = async (input: string, language: Language = 'zh', 
       ${contentToAnalyze}
     `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
-      config: {
+    const response = await callGeminiProxy(
+      "gemini-3-flash-preview",
+      prompt,
+      {
         responseMimeType: "application/json",
       }
-    });
+    );
 
     const jsonText = response.text || "{}";
     const result = JSON.parse(jsonText) as AnalysisResult;
@@ -367,14 +430,14 @@ export const generateSmartReplies = async (comment: string, context: string, lan
       ]
     `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
-      config: {
+    const response = await callGeminiProxy(
+      "gemini-3-flash-preview",
+      prompt,
+      {
         responseMimeType: "application/json",
         // 修复：移除不匹配的 responseSchema，因为返回的是简单数组而不是复杂对象
       }
-    });
+    );
 
     return JSON.parse(response.text || "[]");
   } catch (error) {
@@ -403,13 +466,13 @@ export const generateTopicDraft = async (topic: string, contextSummary: string, 
           Return JSON: { "title": "The Title", "content": "The full body text including hashtags." }
         `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
-      config: {
+    const response = await callGeminiProxy(
+      "gemini-3-flash-preview",
+      prompt,
+      {
         responseMimeType: "application/json"
       }
-    });
+    );
 
     return JSON.parse(response.text || "{}");
   } catch (error) {
@@ -421,18 +484,18 @@ export const generateTopicDraft = async (topic: string, contextSummary: string, 
 // 5. TTS Service
 export const generateSpeech = async (text: string): Promise<ArrayBuffer> => {
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text }] }],
-      config: {
-        responseModalities: [Modality.AUDIO],
+    const response = await callGeminiProxy(
+      "gemini-2.5-flash-preview-tts",
+      [{ parts: [{ text }] }],
+      {
+        responseModalities: ["AUDIO"],
         speechConfig: {
           voiceConfig: {
             prebuiltVoiceConfig: { voiceName: 'Kore' },
           },
         },
-      },
-    });
+      }
+    );
 
     const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     if (!base64Audio) throw new Error("No audio data received");
@@ -520,10 +583,22 @@ export const createChatSession = (contextData: AnalysisResult) => {
 
   contextString += `\nIf the user asks follow-up questions after the report, continue acting as the \"Social Media Data Mining Expert\".`;
 
-  return ai.chats.create({
+  // 返回一个聊天会话对象，包含 sendMessage 方法
+  return {
     model: 'gemini-3-flash-preview',
     config: {
       systemInstruction: contextString
+    },
+    sendMessage: async (params: { message: string }) => {
+      const response = await callChatProxy(
+        'sendMessage',
+        'gemini-3-flash-preview',
+        { systemInstruction: contextString },
+        params.message
+      );
+      return {
+        text: response.text || ''
+      };
     }
-  });
+  };
 };

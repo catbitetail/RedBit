@@ -3,6 +3,7 @@ import { X, Send, Bot, FilePenLine, MessageSquare, Loader2, Eye, Edit3, Copy, Ch
 import { AnalysisResult, ChatMessage } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { createChatSession } from '../services/geminiService';
+import { GenerateContentResponse, Chat } from '@google/genai';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -25,7 +26,7 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
     const [isInitializing, setIsInitializing] = useState(true); // New: Track initial report generation
     const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
-    const chatSessionRef = useRef<any>(null); // Changed from Chat to any due to custom proxy implementation
+    const chatSessionRef = useRef<Chat | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const chatFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -54,9 +55,9 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
                 if (chatSessionRef.current) {
                     const response = await chatSessionRef.current.sendMessage({ message: triggerPrompt });
                     const text = response.text || "Report generation failed.";
-
+                    
                     setMessages([{ role: 'model', text: text }]);
-
+                    
                     // Save this to the parent data structure so we don't regenerate next time
                     onDataUpdate({
                         ...analysisData,
@@ -132,7 +133,7 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
         setIsSending(true);
 
         try {
-            let response: any; // Changed to any due to custom proxy implementation
+            let response: GenerateContentResponse;
 
             if (userImages.length > 0) {
                 // TODO: 修复 Gemini SDK 多模态 API 调用

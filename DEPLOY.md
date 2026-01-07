@@ -1,9 +1,9 @@
 ﻿#  Cloudflare Pages 部署指南
 
 ##  项目状态: 构建成功
-\\\ash
+```bash
 npm run build  #  已通过测试
-\\\
+```
 
 ##  快速部署步骤
 
@@ -18,11 +18,11 @@ npm run build  #  已通过测试
 5. 环境变量: VITE_GEMINI_API_KEY = your_api_key
 
 ### 2. 本地开发
-\\\ash
+```bash
 cp .env.example .env  # 配置API Key
 npm install
 npm run dev
-\\\
+```
 
 ##  已知限制
 1. 聊天图片上传暂时禁用（SDK API需更新）

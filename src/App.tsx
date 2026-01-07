@@ -462,6 +462,7 @@ const App: React.FC = () => {
                         analysisData={data}
                         notes={notes}
                         onNotesChange={setNotes}
+                        onDataUpdate={setData} // Pass setData to update the report with generated chat content
                         onClose={() => setShowTools(false)}
                     />
                 )}
