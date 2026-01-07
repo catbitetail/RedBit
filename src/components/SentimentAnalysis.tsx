@@ -43,9 +43,9 @@ const SentimentAnalysis: React.FC<Props> = ({ data }) => {
       {/* Radar Chart */}
       <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800">
         <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">{t('radar_title')}</h3>
-        <div className="h-64">
+        <div className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={emotions}>
+            <RadarChart data={emotions}>
               <PolarGrid stroke={gridColor} />
               <PolarAngleAxis dataKey="label" tick={{ fill: axisColor, fontSize: 12 }} />
               <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} />
