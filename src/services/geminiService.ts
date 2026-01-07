@@ -35,16 +35,45 @@ const callGeminiProxy = async (model: string, contents: any, config?: any): Prom
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
+    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+    console.error('[Proxy Error]', errorData);
     throw new Error(`Proxy Error: ${errorData.error || response.statusText}`);
   }
 
   const data = await response.json();
 
+  // 安全提取 text，兼容不同的响应格式
+  let text = "";
+
+  // 尝试多种可能的路径
+  if (data.candidates && Array.isArray(data.candidates) && data.candidates[0]) {
+    const candidate = data.candidates[0];
+    if (candidate.content && candidate.content.parts && Array.isArray(candidate.content.parts)) {
+      text = candidate.content.parts[0]?.text || "";
+    }
+  }
+
+  // 如果上面的路径都失败了，尝试直接从 data 中提取
+  if (!text && data.text) {
+    text = data.text;
+  }
+
+  // 如果还是没有，尝试 JSON 字符串化后提取
+  if (!text && data.content) {
+    text = typeof data.content === 'string' ? data.content : JSON.stringify(data.content);
+  }
+
+  console.log('[Gemini Proxy Response]', {
+    hasText: !!text,
+    textLength: text.length,
+    hasCandidates: !!data.candidates,
+    rawKeys: Object.keys(data)
+  });
+
   // 返回包装的响应，模拟 Google GenAI SDK 的结构
   return {
-    text: data.candidates?.[0]?.content?.parts?.[0]?.text || "",
-    candidates: data.candidates,
+    text: text,
+    candidates: data.candidates || [],
     raw: data
   };
 };
