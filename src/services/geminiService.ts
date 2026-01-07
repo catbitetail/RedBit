@@ -413,7 +413,67 @@ export const analyzeComments = async (input: string, language: Language = 'zh', 
     );
 
     const jsonText = response.text || "{}";
-    const result = JSON.parse(jsonText) as AnalysisResult;
+    
+    // 尝试解析 JSON，处理可能的格式问题
+    let result: AnalysisResult;
+    try {
+      // 移除可能的 Markdown 代码块
+      const cleanedJson = jsonText
+        .replace(/^```json\s*/m, '')
+        .replace(/^```\s*/m, '')
+        .replace(/```\s*$/m, '')
+        .trim();
+      
+      console.log('[JSON Parse]', { 
+        originalLength: jsonText.length, 
+        cleanedLength: cleanedJson.length,
+        firstChars: cleanedJson.substring(0, 100)
+      });
+      
+      result = JSON.parse(cleanedJson) as AnalysisResult;
+      
+      // 验证并初始化必需字段，防止 undefined
+      result.emotions = result.emotions || [];
+      result.key_insights = result.key_insights || [];
+      result.comprehensive_viewpoints = result.comprehensive_viewpoints || [];
+      result.next_topics = result.next_topics || [];
+      result.questions_asked = result.questions_asked || [];
+      result.meme_alert = result.meme_alert || [];
+      result.competitor_weaknesses = result.competitor_weaknesses || [];
+      
+      // 验证 class_rep 字段
+      if (!result.class_rep) {
+        result.class_rep = {
+          controversies: [],
+          info_gains: [],
+          god_replies: []
+        };
+      }
+      
+      // 验证 audience_profile 字段
+      if (!result.audience_profile) {
+        result.audience_profile = {
+          description: "Unknown",
+          tags: []
+        };
+      }
+      
+      // 最后验证关键字段
+      if (!result.summary || !result.short_title) {
+        console.error('[Validation Failed] Missing critical fields:', {
+          hasSummary: !!result.summary,
+          hasTitle: !!result.short_title
+        });
+        throw new Error('API returned incomplete data: missing summary or title');
+      }
+      
+    } catch (parseError: any) {
+      console.error('[JSON Parse Error]', {
+        error: parseError.message,
+        jsonPreview: jsonText.substring(0, 500)
+      });
+      throw new Error(`Failed to parse API response: ${parseError.message}`);
+    }
 
     // INJECT RAW CONTENT into the result so it can be saved and used for Q&A later
     // Fallback: If contentToAnalyze is disappointingly short but input was long, use input.
