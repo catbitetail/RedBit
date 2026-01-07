@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Send, Bot, FilePenLine, MessageSquare, Loader2, Eye, Edit3, Copy, Check, Bold, Italic, List, Heading, Code, Link as LinkIcon, Image as ImageIcon, Paperclip } from 'lucide-react';
 import { AnalysisResult, ChatMessage } from '../types';
@@ -11,7 +12,7 @@ interface Props {
     analysisData: AnalysisResult;
     notes: string;
     onNotesChange: (val: string) => void;
-    onDataUpdate: (data: AnalysisResult) => void; // New prop to save the generated report
+    onDataUpdate: (data: AnalysisResult) => void;
     onClose: () => void;
 }
 
@@ -30,12 +31,19 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const chatFileInputRef = useRef<HTMLInputElement>(null);
 
+    // Keep a ref to the latest data to avoid stale closures in async calls
+    const analysisDataRef = useRef(analysisData);
+    useEffect(() => {
+        analysisDataRef.current = analysisData;
+    }, [analysisData]);
+
     const [isNotePreview, setIsNotePreview] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Initialize Session and Report
     useEffect(() => {
         // Always initialize the chat session context so the user can ask follow-up questions
+        // Use the initial data for session creation to keep context
         chatSessionRef.current = createChatSession(analysisData);
 
         const initChat = async () => {
@@ -59,8 +67,9 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
                     setMessages([{ role: 'model', text: text }]);
                     
                     // Save this to the parent data structure so we don't regenerate next time
+                    const currentData = analysisDataRef.current;
                     onDataUpdate({
-                        ...analysisData,
+                        ...currentData,
                         initial_chat_response: text
                     });
                 }
@@ -74,7 +83,7 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
 
         initChat();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [analysisData.raw_content, analysisData.summary]); // Only re-run if underlying content changes drastically, ignore onDataUpdate loop
+    }, [analysisData.raw_content, analysisData.summary]); // Only re-run if underlying content changes drastically
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -136,6 +145,7 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
             let response: GenerateContentResponse;
 
             if (userImages.length > 0) {
+                // Multimodal Request
                 const parts = [
                     { text: userMsg },
                     ...userImages.map(img => ({
@@ -145,7 +155,6 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
                         }
                     }))
                 ];
-                // Fix: use 'message' parameter instead of 'content' for multimodal input
                 response = await chatSessionRef.current.sendMessage({ message: parts });
             } else {
                 // Text Only Request
