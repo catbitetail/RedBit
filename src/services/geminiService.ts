@@ -311,6 +311,9 @@ export const extractTextFromImage = async (base64Image: string): Promise<string>
 
 // 2. Main Analysis with Thinking Mode
 export const analyzeComments = async (input: string, language: Language = 'zh', cookie?: string): Promise<AnalysisResult> => {
+  // 🔥 关键改进：一开始就备份原始输入
+  const rawInputBackup = input;
+  
   try {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const urls = input.match(urlRegex);
@@ -409,6 +412,7 @@ export const analyzeComments = async (input: string, language: Language = 'zh', 
       prompt,
       {
         responseMimeType: "application/json",
+        responseSchema: analysisSchema,  // 🔥 明确传递 schema
       }
     );
 
@@ -485,15 +489,44 @@ export const analyzeComments = async (input: string, language: Language = 'zh', 
     result.raw_content = finalRawContent;
 
     return result;
+    
   } catch (error: any) {
     console.error("Analysis Error:", error);
+    
+    // 🔥 关键改进：失败时也返回包含 raw_content 的对象
+    console.warn('[Fallback] Returning minimal structure with preserved raw_content');
+    
+    const fallbackResult: AnalysisResult = {
+      short_title: "分析失败",
+      summary: `分析过程出现错误：${error.message}. 您的原始内容已保留，可以尝试重新分析。`,
+      sentiment_score: 0,
+      emotions: [],
+      key_insights: [],
+      class_rep: {
+        controversies: [],
+        info_gains: [],
+        god_replies: []
+      },
+      comprehensive_viewpoints: [],
+      audience_profile: {
+        description: "分析失败，数据不可用",
+        tags: []
+      },
+      next_topics: [],
+      questions_asked: [],
+      meme_alert: [],
+      competitor_weaknesses: [],
+      raw_content: rawInputBackup,  // ✅ 保留原始输入！
+    };
+    
+    // 特殊错误处理
     if (error.message === "URL_NOT_INDEXED") {
-      throw error;
+      fallbackResult.summary = "无法访问该 URL。请尝试直接粘贴评论文本或截图。";
+      throw error;  // URL 错误还是要抛出
     }
-    if (input.trim().length < 50 && input.trim().match(/^https?:\/\//)) {
-      throw new Error("Unable to retrieve content. Please try pasting text/image.");
-    }
-    throw new Error("Failed to analyze comments. (API Error)");
+    
+    // 返回备用结果而不是抛出错误
+    return fallbackResult;
   }
 };
 

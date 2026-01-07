@@ -91,6 +91,12 @@ export const onRequestPost = async (context: RequestContext) => {
             }
         }
 
+        console.log('[Cloudflare Function] Request config:', {
+            hasResponseMimeType: !!config?.responseMimeType,
+            hasResponseSchema: !!config?.responseSchema,
+            model
+        });
+
         // 转发请求到 Gemini API
         const geminiResponse = await fetch(geminiUrl, {
             method: 'POST',
