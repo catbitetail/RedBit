@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Users, Lightbulb, Target, TrendingUp, PenTool, X, Copy, Check, Loader2 } from 'lucide-react';
+import { Users, Lightbulb, Target, TrendingUp, PenTool, X, Copy, Check, Rabbit } from 'lucide-react';
 import { AnalysisResult } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { generateTopicDraft } from '../services/geminiService';
@@ -98,7 +98,7 @@ const AudienceInsights: React.FC<Props> = ({ data }) => {
               >
                 {draftingTopic === topic ? (
                     <>
-                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <Rabbit className="w-3 h-3 animate-bounce" />
                         {t('generating_btn')}
                     </>
                 ) : (

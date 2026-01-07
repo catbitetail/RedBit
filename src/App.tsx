@@ -525,7 +525,7 @@ const App: React.FC = () => {
                         <div className="flex items-center gap-3">
 
                             {/* Theme & Effect Toggles - 移动端也显示 */}
-                            <div className="flex items-center bg-white/50 dark:bg-slate-800/50 backdrop-blur rounded-full p-1 border border-slate-200/60 dark:border-slate-700/60 shadow-sm mr-2">
+                            <div className="flex items-center bg-white/50 dark:bg-slate-800/50 backdrop-blur rounded-full p-1 border border-slate-200/60 dark:border-slate-700/60 shadow-sm mr-3 sm:mr-2">
                                 {/* 特效切换：移动端也显示 */}
                                 <button
                                     onClick={toggleEffect}

@@ -8,7 +8,7 @@ export const translations = {
     hero_title_1: "Mining the",
     hero_title_2: "Red Ocean",
     hero_desc: "\"Travels a thousand miles a day.\" RedBit (Chitu) extracts deep structured insights and audience profiles from Xiaohongshu comments at the speed of light.",
-    
+
     // Input
     step_1: "Step 1",
     input_source: "Input Source",
@@ -27,14 +27,14 @@ export const translations = {
     tip_url: "Tip: Supports xhslink.com short links.",
     cookie_label: "XHS Cookie (Optional)",
     cookie_note: "Providing a cookie allows for deeper data extraction if connected to a backend crawler.",
-    
+
     // Errors
     err_url_not_indexed: "The AI could not find this post in search results (it might be new or not indexed). Please use the 'Paste Text/Image' tab instead.",
     err_generic: "Analysis failed. Please try again or check your input.",
 
     // Results
     report_title: "Analysis Report",
-    
+
     // Class Rep
     class_rep_title: "Executive Summary",
     listen_btn: "Listen",
@@ -95,7 +95,7 @@ export const translations = {
     import_json: "Import JSON",
     import_success: "Successfully imported reports!",
     import_error: "Invalid JSON file.",
-    
+
     // Chat & Notes
     tools_panel: "RedBit Assistant & Notes",
     tab_chat: "Q&A",
@@ -111,7 +111,7 @@ export const translations = {
     hero_title_1: "日行千里 深挖",
     hero_title_2: "红海",
     hero_desc: "赤兔 —— 你的 AI 数据挖掘神驹<br />从海量小红书评论中极速提炼用户痛点、市场机会与情绪洞察",
-    
+
     // Input
     step_1: "第一步",
     input_source: "输入来源",
@@ -137,7 +137,7 @@ export const translations = {
 
     // Results
     report_title: "赤兔分析报告",
-    
+
     // Class Rep
     class_rep_title: "“课代表”总结",
     listen_btn: "收听",
@@ -214,7 +214,7 @@ export const translations = {
     hero_title_1: "千里を",
     hero_title_2: "駆け抜ける",
     hero_desc: "RedBit (赤兎) - 高度なAIを使用して、Xiaohongshu（小紅書）のコメントから構造化されたインサイトを光速で抽出します。",
-    
+
     // Input
     step_1: "ステップ 1",
     input_source: "入力ソース",
@@ -240,7 +240,7 @@ export const translations = {
 
     // Results
     report_title: "分析レポート",
-    
+
     // Class Rep
     class_rep_title: "「学級委員」まとめ",
     listen_btn: "聞く",
@@ -317,7 +317,7 @@ export const translations = {
     hero_title_1: "천리를",
     hero_title_2: "달리는",
     hero_desc: "RedBit (적토마) - 샤오홍슈(Xiaohongshu) 댓글에서 구조화된 인사이트를 빛의 속도로 추출합니다.",
-    
+
     // Input
     step_1: "1단계",
     input_source: "입력 소스",
@@ -343,7 +343,7 @@ export const translations = {
 
     // Results
     report_title: "분석 보고서",
-    
+
     // Class Rep
     class_rep_title: "요약 리포트",
     listen_btn: "듣기",

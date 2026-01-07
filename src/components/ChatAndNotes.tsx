@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Bot, FilePenLine, MessageSquare, Loader2, Eye, Edit3, Copy, Check, Bold, Italic, List, Heading, Code, Link as LinkIcon, Image as ImageIcon, Paperclip } from 'lucide-react';
+import { X, Send, Rabbit, FilePenLine, MessageSquare, Loader2, Eye, Edit3, Copy, Check, Bold, Italic, List, Heading, Code, Link as LinkIcon, Image as ImageIcon, Paperclip } from 'lucide-react';
 import { AnalysisResult, ChatMessage } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { createChatSession } from '../services/geminiService';
@@ -302,7 +302,7 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
                             {/* Initial Loading State for Report */}
                             {isInitializing && (
                                 <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-500 space-y-3 animate-pulse">
-                                    <Bot className="w-10 h-10 text-rose-500/50" />
+                                    <Rabbit className="w-10 h-10 text-rose-500/50" />
                                     <div className="text-sm font-medium">Generating Expert Insight Report...</div>
                                     <div className="text-xs">Based on provided persona & data</div>
                                 </div>
@@ -315,7 +315,7 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
                                             ? 'bg-rose-500 text-white rounded-tr-none shadow-rose-500/20'
                                             : 'bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-tl-none'}`}
                                     >
-                                        {msg.role === 'model' && <Bot className="w-4 h-4 text-rose-500 dark:text-rose-400 mb-2" />}
+                                        {msg.role === 'model' && <Rabbit className="w-4 h-4 text-rose-500 dark:text-rose-400 mb-2" />}
 
                                         {/* Image Display in Chat History */}
                                         {msg.images && msg.images.length > 0 && (
