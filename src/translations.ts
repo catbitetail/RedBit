@@ -108,14 +108,14 @@ export const translations = {
   zh: {
     app_name: "赤兔 RedBit",
     powered_by: "基于 Gemini 3.0 Pro",
-    hero_title_1: "日行千里",
-    hero_title_2: "深挖红海",
-    hero_desc: "赤兔 —— 你的 AI 数据挖掘神驹 从海量小红书评论中极速提炼用户痛点、市场机会与情绪洞察",
+    hero_title_1: "日行千里 深挖",
+    hero_title_2: "红海",
+    hero_desc: "赤兔 —— 你的 AI 数据挖掘神驹<br />从海量小红书评论中极速提炼用户痛点、市场机会与情绪洞察",
     
     // Input
     step_1: "第一步",
     input_source: "输入来源",
-    tab_text: "粘贴文本 / 图片",
+    tab_text: "粘贴图文",
     tab_url: "帖子链接",
     placeholder_text: "在此粘贴评论或上传截图...",
     placeholder_url: "粘贴小红书分享口令或链接 (如 http://xhslink.com/...)",

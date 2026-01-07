@@ -526,15 +526,15 @@ const App: React.FC = () => {
 
                             {/* Theme & Effect Toggles - 移动端也显示 */}
                             <div className="flex items-center bg-white/50 dark:bg-slate-800/50 backdrop-blur rounded-full p-1 border border-slate-200/60 dark:border-slate-700/60 shadow-sm mr-2">
-                                {/* 特效切换：只在桌面端显示 */}
+                                {/* 特效切换：移动端也显示 */}
                                 <button
                                     onClick={toggleEffect}
-                                    className={`hidden sm:block p-1.5 rounded-full transition-all duration-300 ${showEffect ? 'text-pink-500 bg-pink-50 dark:bg-pink-900/30' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                                    className={`p-1.5 rounded-full transition-all duration-300 ${showEffect ? 'text-pink-500 bg-pink-50 dark:bg-pink-900/30' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
                                     title={theme === 'dark' ? "Let it snow" : "Scatter petals"}
                                 >
                                     {theme === 'dark' ? <Snowflake className="w-4 h-4" /> : <Flower className="w-4 h-4" />}
                                 </button>
-                                <div className="hidden sm:block w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                                <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
                                 {/* 主题切换：移动端也显示 */}
                                 <button
                                     onClick={toggleTheme}
@@ -669,8 +669,7 @@ const App: React.FC = () => {
                             </h2>
                             <p className="text-lg md:text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed font-sans">
                                 {/* Added <br> for better readability as requested */}
-                                赤兔 —— 你的 AI 数据挖掘神驹<br className="hidden md:block" />
-                                从海量小红书评论中极速提炼用户痛点、市场机会与情绪洞察
+                                <span dangerouslySetInnerHTML={{ __html: t('hero_desc') }} />
                             </p>
                         </div>
                     )}
