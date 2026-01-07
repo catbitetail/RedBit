@@ -413,7 +413,7 @@ export const analyzeComments = async (input: string, language: Language = 'zh', 
     );
 
     const jsonText = response.text || "{}";
-    
+
     // 尝试解析 JSON，处理可能的格式问题
     let result: AnalysisResult;
     try {
@@ -423,15 +423,15 @@ export const analyzeComments = async (input: string, language: Language = 'zh', 
         .replace(/^```\s*/m, '')
         .replace(/```\s*$/m, '')
         .trim();
-      
-      console.log('[JSON Parse]', { 
-        originalLength: jsonText.length, 
+
+      console.log('[JSON Parse]', {
+        originalLength: jsonText.length,
         cleanedLength: cleanedJson.length,
         firstChars: cleanedJson.substring(0, 100)
       });
-      
+
       result = JSON.parse(cleanedJson) as AnalysisResult;
-      
+
       // 验证并初始化必需字段，防止 undefined
       result.emotions = result.emotions || [];
       result.key_insights = result.key_insights || [];
@@ -440,7 +440,7 @@ export const analyzeComments = async (input: string, language: Language = 'zh', 
       result.questions_asked = result.questions_asked || [];
       result.meme_alert = result.meme_alert || [];
       result.competitor_weaknesses = result.competitor_weaknesses || [];
-      
+
       // 验证 class_rep 字段
       if (!result.class_rep) {
         result.class_rep = {
@@ -449,7 +449,7 @@ export const analyzeComments = async (input: string, language: Language = 'zh', 
           god_replies: []
         };
       }
-      
+
       // 验证 audience_profile 字段
       if (!result.audience_profile) {
         result.audience_profile = {
@@ -457,7 +457,7 @@ export const analyzeComments = async (input: string, language: Language = 'zh', 
           tags: []
         };
       }
-      
+
       // 最后验证关键字段
       if (!result.summary || !result.short_title) {
         console.error('[Validation Failed] Missing critical fields:', {
@@ -466,7 +466,7 @@ export const analyzeComments = async (input: string, language: Language = 'zh', 
         });
         throw new Error('API returned incomplete data: missing summary or title');
       }
-      
+
     } catch (parseError: any) {
       console.error('[JSON Parse Error]', {
         error: parseError.message,
