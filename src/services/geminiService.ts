@@ -313,7 +313,7 @@ export const extractTextFromImage = async (base64Image: string): Promise<string>
 export const analyzeComments = async (input: string, language: Language = 'zh', cookie?: string): Promise<AnalysisResult> => {
   // 🔥 关键改进：一开始就备份原始输入
   const rawInputBackup = input;
-  
+
   try {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const urls = input.match(urlRegex);
@@ -489,13 +489,13 @@ export const analyzeComments = async (input: string, language: Language = 'zh', 
     result.raw_content = finalRawContent;
 
     return result;
-    
+
   } catch (error: any) {
     console.error("Analysis Error:", error);
-    
+
     // 🔥 关键改进：失败时也返回包含 raw_content 的对象
     console.warn('[Fallback] Returning minimal structure with preserved raw_content');
-    
+
     const fallbackResult: AnalysisResult = {
       short_title: "分析失败",
       summary: `分析过程出现错误：${error.message}. 您的原始内容已保留，可以尝试重新分析。`,
@@ -518,13 +518,13 @@ export const analyzeComments = async (input: string, language: Language = 'zh', 
       competitor_weaknesses: [],
       raw_content: rawInputBackup,  // ✅ 保留原始输入！
     };
-    
+
     // 特殊错误处理
     if (error.message === "URL_NOT_INDEXED") {
       fallbackResult.summary = "无法访问该 URL。请尝试直接粘贴评论文本或截图。";
       throw error;  // URL 错误还是要抛出
     }
-    
+
     // 返回备用结果而不是抛出错误
     return fallbackResult;
   }
