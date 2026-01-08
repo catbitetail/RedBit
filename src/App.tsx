@@ -508,15 +508,18 @@ const App: React.FC = () => {
                     </>
                 )}
 
-                {/* Right Tools Drawer */}
+                {/* Right Tools Drawer with Blur Backdrop */}
                 {showTools && data && (
-                    <ChatAndNotes
-                        analysisData={data}
-                        notes={notes}
-                        onNotesChange={setNotes}
-                        onDataUpdate={handleDataUpdate} // Use handleDataUpdate to sync both state and archives
-                        onClose={() => setShowTools(false)}
-                    />
+                    <>
+                        <div className="fixed inset-0 bg-slate-900/20 dark:bg-slate-950/60 backdrop-blur-sm z-50 transition-opacity" onClick={() => setShowTools(false)} />
+                        <ChatAndNotes
+                            analysisData={data}
+                            notes={notes}
+                            onNotesChange={setNotes}
+                            onDataUpdate={handleDataUpdate} // Use handleDataUpdate to sync both state and archives
+                            onClose={() => setShowTools(false)}
+                        />
+                    </>
                 )}
 
                 {/* Floating Glass Header */}
@@ -701,7 +704,7 @@ const App: React.FC = () => {
                     </div>
                 </header>
 
-                <main className={`relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 transition-all duration-500 ${showTools ? 'lg:pr-[26rem]' : ''}`}>
+                <main className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 transition-all duration-500">
 
                     {/* Hero Section (Only show if no data) */}
                     {!data && (
