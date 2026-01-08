@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Rabbit, FilePenLine, MessageSquare, Loader2, Eye, Edit3, Copy, Check, Bold, Italic, List, Heading, Code, Link as LinkIcon, Image as ImageIcon, Paperclip, Download, ChevronDown, FileText } from 'lucide-react';
+import { X, Send, Rabbit, FilePenLine, MessageSquare, Loader2, Copy, Check, Bold, Italic, List, Heading, Code, Link as LinkIcon, Image as ImageIcon, Paperclip, Download, ChevronDown, FileText } from 'lucide-react';
 import { AnalysisResult, ChatMessage } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { createChatSession } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 
 interface Props {
     analysisData: AnalysisResult;
@@ -35,10 +38,12 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
         analysisDataRef.current = analysisData;
     }, [analysisData]);
 
-    const [isNotePreview, setIsNotePreview] = useState(true); // Changed: Default to preview/rendered mode
+    const [isNotePreview, setIsNotePreview] = useState(true); // Always true for WYSIWYG mode
+    const [isEditing, setIsEditing] = useState(false); // Track if user is editing
     const [showExportMenu, setShowExportMenu] = useState(false); // Export format dropdown
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const exportMenuRef = useRef<HTMLDivElement>(null);
+    const editableRef = useRef<HTMLDivElement>(null);
     
     // Close export menu when clicking outside
     useEffect(() => {
@@ -529,110 +534,99 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
                 {activeTab === 'notes' && (
                     <div className="absolute inset-0 flex flex-col bg-slate-50/30 dark:bg-slate-900/30">
                         <div className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 p-2 flex justify-between items-center">
+                            {/* Markdown 工具栏 */}
+                            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar px-1">
+                                <button onClick={() => insertMarkdown('**', '**')} title="Bold" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><Bold className="w-4 h-4" /></button>
+                                <button onClick={() => insertMarkdown('*', '*')} title="Italic" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><Italic className="w-4 h-4" /></button>
+                                <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                                <button onClick={() => insertMarkdown('# ')} title="Heading 1" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><Heading className="w-4 h-4" /></button>
+                                <button onClick={() => insertMarkdown('- ')} title="List" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><List className="w-4 h-4" /></button>
+                                <button onClick={() => insertMarkdown('```\n', '\n```')} title="Code Block" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><Code className="w-4 h-4" /></button>
+                                <button onClick={() => insertMarkdown('[', '](url)')} title="Link" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><LinkIcon className="w-4 h-4" /></button>
+                                <button onClick={() => insertMarkdown('$', '$')} title="Inline Math" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-xs font-bold">$x$</button>
+                            </div>
 
-                            {!isNotePreview ? (
-                                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar px-1">
-                                    <button onClick={() => insertMarkdown('**', '**')} title="Bold" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><Bold className="w-4 h-4" /></button>
-                                    <button onClick={() => insertMarkdown('*', '*')} title="Italic" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><Italic className="w-4 h-4" /></button>
-                                    <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                                    <button onClick={() => insertMarkdown('# ')} title="Heading 1" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><Heading className="w-4 h-4" /></button>
-                                    <button onClick={() => insertMarkdown('- ')} title="List" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><List className="w-4 h-4" /></button>
-                                    <button onClick={() => insertMarkdown('```\n', '\n```')} title="Code Block" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><Code className="w-4 h-4" /></button>
-                                    <button onClick={() => insertMarkdown('[', '](url)')} title="Link" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><LinkIcon className="w-4 h-4" /></button>
-                                </div>
-                            ) : (
-                                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 px-2 uppercase tracking-wider">Markdown Rendered</span>
-                            )}
-
-                            <div className="flex items-center gap-2 ml-2">
-                                {/* 导出按钮 - 下拉菜单 */}
-                                <div className="relative" ref={exportMenuRef}>
-                                    <button
-                                        onClick={() => setShowExportMenu(!showExportMenu)}
-                                        disabled={!notes.trim()}
-                                        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 disabled:opacity-40 disabled:cursor-not-allowed"
-                                        title="导出随手记"
-                                    >
-                                        <Download className="w-3 h-3" /> 导出 <ChevronDown className={`w-3 h-3 transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
-                                    </button>
-
-                                    {/* 导出格式下拉菜单 */}
-                                    {showExportMenu && notes.trim() && (
-                                        <div className="absolute top-full left-0 mt-1 w-40 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-50 animate-fade-in-up">
-                                            <button
-                                                onClick={handleExportMarkdown}
-                                                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors text-left"
-                                            >
-                                                <FileText className="w-4 h-4" />
-                                                <div>
-                                                    <div className="font-bold">Markdown</div>
-                                                    <div className="text-[10px] text-slate-400">.md 文件</div>
-                                                </div>
-                                            </button>
-                                            <button
-                                                onClick={handleExportPDF}
-                                                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors text-left"
-                                            >
-                                                <Download className="w-4 h-4" />
-                                                <div>
-                                                    <div className="font-bold">PDF</div>
-                                                    <div className="text-[10px] text-slate-400">.pdf 文件</div>
-                                                </div>
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                                
-                                {/* 编辑/预览切换按钮 */}
+                            {/* 导出按钮 */}
+                            <div className="relative" ref={exportMenuRef}>
                                 <button
-                                    onClick={() => setIsNotePreview(!isNotePreview)}
-                                    className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all
-                                     ${isNotePreview
-                                            ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-                                            : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'}
-                                `}
+                                    onClick={() => setShowExportMenu(!showExportMenu)}
+                                    disabled={!notes.trim()}
+                                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                    title="导出随手记"
                                 >
-                                    {isNotePreview ? (
-                                        <>
-                                            <Edit3 className="w-3 h-3" /> 编辑
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Eye className="w-3 h-3" /> 预览
-                                        </>
-                                    )}
+                                    <Download className="w-3 h-3" /> 导出 <ChevronDown className={`w-3 h-3 transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
                                 </button>
+
+                                {/* 导出格式下拉菜单 */}
+                                {showExportMenu && notes.trim() && (
+                                    <div className="absolute top-full right-0 mt-1 w-40 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-50 animate-fade-in-up">
+                                        <button
+                                            onClick={handleExportMarkdown}
+                                            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors text-left"
+                                        >
+                                            <FileText className="w-4 h-4" />
+                                            <div>
+                                                <div className="font-bold">Markdown</div>
+                                                <div className="text-[10px] text-slate-400">.md 文件</div>
+                                            </div>
+                                        </button>
+                                        <button
+                                            onClick={handleExportPDF}
+                                            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors text-left"
+                                        >
+                                            <Download className="w-4 h-4" />
+                                            <div>
+                                                <div className="font-bold">PDF</div>
+                                                <div className="text-[10px] text-slate-400">.pdf 文件</div>
+                                            </div>
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-4">
-                            {isNotePreview ? (
-                                <div className={`prose prose-sm max-w-none bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm ${markdownStyles}`}>
-                                    {notes ? (
-                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                            {notes}
-                                        </ReactMarkdown>
-                                    ) : (
-                                        <span className="text-slate-300 dark:text-slate-600 italic">Nothing to preview...</span>
-                                    )}
-                                </div>
-                            ) : (
-                                <textarea
-                                    ref={textareaRef}
-                                    value={notes}
-                                    onChange={(e) => onNotesChange(e.target.value)}
-                                    onPaste={handleNotePaste}
-                                    placeholder={t('notes_placeholder') + " (Markdown & Images Supported)"}
-                                    className="w-full h-full p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl resize-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none text-sm text-slate-700 dark:text-slate-300 leading-relaxed shadow-sm font-mono placeholder:text-slate-300 dark:placeholder:text-slate-600"
-                                />
-                            )}
+                            {/* WYSIWYG Markdown Editor with LaTeX support */}
+                            <div 
+                                className="w-full h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden"
+                                onClick={() => {
+                                    if (!isEditing && textareaRef.current) {
+                                        setIsEditing(true);
+                                        textareaRef.current.focus();
+                                    }
+                                }}
+                            >
+                                {isEditing ? (
+                                    <textarea
+                                        ref={textareaRef}
+                                        value={notes}
+                                        onChange={(e) => onNotesChange(e.target.value)}
+                                        onBlur={() => setIsEditing(false)}
+                                        onPaste={handleNotePaste}
+                                        placeholder={t('notes_placeholder') + " (Markdown, LaTeX & Images Supported)"}
+                                        className="w-full h-full p-6 bg-transparent resize-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-mono placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                                        autoFocus
+                                    />
+                                ) : (
+                                    <div className={`prose prose-sm max-w-none p-6 cursor-text ${markdownStyles}`}>
+                                        {notes ? (
+                                            <ReactMarkdown 
+                                                remarkPlugins={[remarkGfm, remarkMath]}
+                                                rehypePlugins={[rehypeKatex]}
+                                            >
+                                                {notes}
+                                            </ReactMarkdown>
+                                        ) : (
+                                            <span className="text-slate-300 dark:text-slate-600 italic">点击开始记录...</span>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
-                        {!isNotePreview && (
-                            <p className="text-[10px] text-slate-400 dark:text-slate-600 pb-2 text-center">
-                                Auto-saved to current report
-                            </p>
-                        )}
+                        <p className="text-[10px] text-slate-400 dark:text-slate-600 pb-2 text-center">
+                            Auto-saved to current report
+                        </p>
                     </div>
                 )}
 
