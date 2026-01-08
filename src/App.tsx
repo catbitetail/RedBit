@@ -123,16 +123,12 @@ const App: React.FC = () => {
     const handleSave = () => {
         if (!data) return;
 
-        // Check if this report was imported and has an original filename
-        const existingReport = archives.find(a => a.id === currentReportId);
-        
         const newReport: SavedReport = {
             id: currentReportId || Date.now().toString(),
             timestamp: Date.now(),
             title: data.short_title || data.summary.slice(0, 30) || "Report",
             data: data,
-            notes: notes,
-            originalFilename: existingReport?.originalFilename // Preserve original filename if exists
+            notes: notes
         };
 
         let newArchives;
@@ -218,24 +214,14 @@ const App: React.FC = () => {
             data: data,
             notes: notes
         };
-    
-        // Check if this report was imported and has an original filename
-        const existingReport = archives.find(a => a.id === currentReportId);
-        const originalFilename = existingReport?.originalFilename;
-    
-        let filename: string;
-        if (originalFilename) {
-            // Use the original filename to "overwrite" the imported file
-            filename = originalFilename;
-        } else {
-            // Generate new filename using the standard format
-            const dateStr = new Date().toISOString().slice(0, 10);
-            const rawTitle = data.short_title || data.summary.slice(0, 15) || "Report";
-            const safeTitle = rawTitle.replace(/[\\/:*?"<>|]/g, "_").replace(/\s+/g, "").trim();
-            filename = `"${safeTitle}"挖掘数据${dateStr}.json`;
-        }
-    
-        downloadJSON(report, filename);
+
+        const dateStr = new Date().toISOString().slice(0, 10);
+        // Use short_title from AI if available, else summary slice, fallback to "Report"
+        const rawTitle = data.short_title || data.summary.slice(0, 15) || "Report";
+        const safeTitle = rawTitle.replace(/[\\/:*?"<>|]/g, "_").replace(/\s+/g, "").trim();
+
+        // Updated format: Use full-width quotes “ ” instead of parentheses （ ）
+        downloadJSON(report, `“${safeTitle}”挖掘数据${dateStr}.json`);
     };
 
     const handleExportPDF = async (quality: 'standard' | 'hd') => {
@@ -397,13 +383,13 @@ const App: React.FC = () => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
 
-        const readFile = (file: File): Promise<{ content: any; filename: string } | null> => {
+        const readFile = (file: File): Promise<any> => {
             return new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = (ev) => {
                     try {
                         const json = JSON.parse(ev.target?.result as string);
-                        resolve({ content: json, filename: file.name });
+                        resolve(json);
                     } catch (err) {
                         console.error(`Error parsing file ${file.name}`, err);
                         resolve(null);
@@ -418,34 +404,20 @@ const App: React.FC = () => {
             const loadedContents = await Promise.all(Array.from(files).map(readFile));
             let allNewItems: SavedReport[] = [];
 
-            loadedContents.forEach(fileData => {
-                if (!fileData) return;
-                const { content, filename } = fileData;
-                
+            loadedContents.forEach(content => {
+                if (!content) return;
                 if (Array.isArray(content)) {
                     const validItems = content.filter((item: any) => item.id && item.data);
-                    // Add original filename to each item if not already present
-                    validItems.forEach((item: SavedReport) => {
-                        if (!item.originalFilename) {
-                            item.originalFilename = filename;
-                        }
-                    });
                     allNewItems.push(...validItems);
                 } else if (content.id && content.data) {
-                    // Single report object
-                    if (!content.originalFilename) {
-                        content.originalFilename = filename;
-                    }
                     allNewItems.push(content);
                 } else if (content.summary && content.key_insights) {
-                    // Raw AnalysisResult without wrapper
                     const recoveredReport: SavedReport = {
                         id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
                         timestamp: Date.now(),
                         title: content.summary.slice(0, 30) || "Imported Report",
                         data: content,
-                        notes: '',
-                        originalFilename: filename
+                        notes: ''
                     };
                     allNewItems.push(recoveredReport);
                 }

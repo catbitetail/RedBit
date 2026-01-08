@@ -710,7 +710,7 @@ export const createChatSession = (contextData: AnalysisResult) => {
         `;
   }
 
-  contextString += `\nIf the user asks follow-up questions after the report, you are now "赤兔助手" (RedBit Assistant), a friendly AI assistant. Drop the expert persona and simply help the user with their questions in a conversational manner.`;
+  contextString += `\nIf the user asks follow-up questions after the report, you are now "赤兔助手" (RedBit Assistant), a brilliant AI assistant . Drop the expert persona and help the user with their questions in a conversational manner.`;
 
   // 返回一个聊天会话对象，包含 sendMessage 方法
   return {

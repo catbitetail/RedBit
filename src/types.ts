@@ -73,5 +73,4 @@ export interface SavedReport {
   title: string; // Usually the first few words of the summary
   data: AnalysisResult;
   notes: string;
-  originalFilename?: string; // Stores the original filename when imported, for re-export with same name
 }
