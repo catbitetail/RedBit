@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Rabbit, FilePenLine, MessageSquare, Loader2, Eye, Edit3, Copy, Check, Bold, Italic, List, Heading, Code, Link as LinkIcon, Image as ImageIcon, Paperclip } from 'lucide-react';
+import { X, Send, Rabbit, FilePenLine, MessageSquare, Loader2, Eye, Edit3, Copy, Check, Bold, Italic, List, Heading, Code, Link as LinkIcon, Image as ImageIcon, Paperclip, Download } from 'lucide-react';
 import { AnalysisResult, ChatMessage } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { createChatSession } from '../services/geminiService';
@@ -35,8 +35,30 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
         analysisDataRef.current = analysisData;
     }, [analysisData]);
 
-    const [isNotePreview, setIsNotePreview] = useState(false);
+    const [isNotePreview, setIsNotePreview] = useState(true); // Changed: Default to preview/rendered mode
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    // Export notes as Markdown file
+    const handleExportNotes = () => {
+        if (!notes.trim()) {
+            alert('没有笔记可以导出');
+            return;
+        }
+
+        const blob = new Blob([notes], { type: 'text/markdown;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        // Generate filename with date
+        const dateStr = new Date().toISOString().slice(0, 10);
+        const title = analysisData.short_title || 'Notes';
+        const safeTitle = title.replace(/[\\/:*?"<>|]/g, '_').slice(0, 20);
+        a.download = `${safeTitle}_随手记_${dateStr}.md`;
+
+        a.click();
+        URL.revokeObjectURL(url);
+    };
 
     // Initialize Session and Report
     useEffect(() => {
@@ -445,27 +467,40 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
                                     <button onClick={() => insertMarkdown('[', '](url)')} title="Link" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><LinkIcon className="w-4 h-4" /></button>
                                 </div>
                             ) : (
-                                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 px-2 uppercase tracking-wider">Preview Mode</span>
+                                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 px-2 uppercase tracking-wider">Markdown Rendered</span>
                             )}
 
-                            <button
-                                onClick={() => setIsNotePreview(!isNotePreview)}
-                                className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ml-2
-                             ${isNotePreview
-                                        ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}
-                        `}
-                            >
-                                {isNotePreview ? (
-                                    <>
-                                        <Edit3 className="w-3 h-3" /> Edit
-                                    </>
-                                ) : (
-                                    <>
-                                        <Eye className="w-3 h-3" /> Preview
-                                    </>
-                                )}
-                            </button>
+                            <div className="flex items-center gap-2 ml-2">
+                                {/* 导出按钮 */}
+                                <button
+                                    onClick={handleExportNotes}
+                                    disabled={!notes.trim()}
+                                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                    title="导出随手记为 Markdown 文件"
+                                >
+                                    <Download className="w-3 h-3" /> 导出
+                                </button>
+                                
+                                {/* 编辑/预览切换按钮 */}
+                                <button
+                                    onClick={() => setIsNotePreview(!isNotePreview)}
+                                    className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all
+                                     ${isNotePreview
+                                            ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                            : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'}
+                                `}
+                                >
+                                    {isNotePreview ? (
+                                        <>
+                                            <Edit3 className="w-3 h-3" /> 编辑
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Eye className="w-3 h-3" /> 预览
+                                        </>
+                                    )}
+                                </button>
+                            </div>
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-4">
