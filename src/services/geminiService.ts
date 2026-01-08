@@ -194,8 +194,8 @@ const generateKeyViewpointsString = (viewpoints: any[]): string => {
 
       if (Array.isArray(c.viewpoints)) {
         viewpointsList = c.viewpoints
-          .filter(v => v && typeof v === 'object' && typeof v.content === 'string')
-          .map(v => v.content)
+          .filter((v: any) => v && typeof v === 'object' && typeof v.content === 'string')
+          .map((v: any) => v.content)
           .join(', ');
       }
 
@@ -710,7 +710,7 @@ export const createChatSession = (contextData: AnalysisResult) => {
         `;
   }
 
-  contextString += `\nIf the user asks follow-up questions after the report, continue acting as the \"Social Media Data Mining Expert\".`;
+  contextString += `\nIf the user asks follow-up questions after the report, you are now "赤兔助手" (RedBit Assistant), a friendly AI assistant. Drop the expert persona and simply help the user with their questions in a conversational manner.`;
 
   // 返回一个聊天会话对象，包含 sendMessage 方法
   return {
