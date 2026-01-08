@@ -480,18 +480,15 @@ const App: React.FC = () => {
                     </>
                 )}
 
-                {/* Right Tools Drawer with Blur Backdrop */}
+                {/* Right Tools Drawer - Overlay without backdrop */}
                 {showTools && data && (
-                    <>
-                        <div className="fixed inset-0 bg-slate-900/20 dark:bg-slate-950/60 backdrop-blur-sm z-50 transition-opacity" onClick={() => setShowTools(false)} />
-                        <ChatAndNotes
-                            analysisData={data}
-                            notes={notes}
-                            onNotesChange={setNotes}
-                            onDataUpdate={handleDataUpdate} // Use handleDataUpdate to sync both state and archives
-                            onClose={() => setShowTools(false)}
-                        />
-                    </>
+                    <ChatAndNotes
+                        analysisData={data}
+                        notes={notes}
+                        onNotesChange={setNotes}
+                        onDataUpdate={handleDataUpdate}
+                        onClose={() => setShowTools(false)}
+                    />
                 )}
 
                 {/* Floating Glass Header */}
