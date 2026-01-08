@@ -39,7 +39,6 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
     }, [analysisData]);
 
     const [isNotePreview, setIsNotePreview] = useState(true); // Always true for WYSIWYG mode
-    const [isEditing, setIsEditing] = useState(false); // Track if user is editing
     const [showExportMenu, setShowExportMenu] = useState(false); // Export format dropdown
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const exportMenuRef = useRef<HTMLDivElement>(null);
@@ -585,43 +584,36 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-4">
-                            {/* WYSIWYG Markdown Editor with LaTeX support */}
-                            <div 
-                                className="w-full h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden"
-                                onClick={() => {
-                                    if (!isEditing && textareaRef.current) {
-                                        setIsEditing(true);
-                                        textareaRef.current.focus();
-                                    }
-                                }}
-                            >
-                                {isEditing ? (
-                                    <textarea
-                                        ref={textareaRef}
-                                        value={notes}
-                                        onChange={(e) => onNotesChange(e.target.value)}
-                                        onBlur={() => setIsEditing(false)}
-                                        onPaste={handleNotePaste}
-                                        placeholder={t('notes_placeholder') + " (Markdown, LaTeX & Images Supported)"}
-                                        className="w-full h-full p-6 bg-transparent resize-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-mono placeholder:text-slate-300 dark:placeholder:text-slate-600"
-                                        autoFocus
-                                    />
-                                ) : (
-                                    <div className={`prose prose-sm max-w-none p-6 cursor-text ${markdownStyles}`}>
-                                        {notes ? (
-                                            <ReactMarkdown 
-                                                remarkPlugins={[remarkGfm, remarkMath]}
-                                                rehypePlugins={[rehypeKatex]}
-                                            >
-                                                {notes}
-                                            </ReactMarkdown>
-                                        ) : (
-                                            <span className="text-slate-300 dark:text-slate-600 italic">点击开始记录...</span>
-                                        )}
+                        <div className="flex-1 overflow-y-auto p-4 relative">
+                            {/* Always-visible textarea for input */}
+                            <textarea
+                                ref={textareaRef}
+                                value={notes}
+                                onChange={(e) => onNotesChange(e.target.value)}
+                                onFocus={() => setIsNotePreview(false)}
+                                onBlur={() => setIsNotePreview(true)}
+                                onPaste={handleNotePaste}
+                                placeholder={t('notes_placeholder') + " (Markdown, LaTeX & Images Supported)"}
+                                className="w-full h-full p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl resize-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-mono placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                                style={{ minHeight: '400px' }}
+                            />
+                            
+                            {/* Markdown Preview Overlay (shows when not focused and has content) */}
+                            {notes && isNotePreview && (
+                                <div 
+                                    className="absolute inset-0 overflow-y-auto p-4 pointer-events-none"
+                                    style={{ top: '0px' }}
+                                >
+                                    <div className={`prose prose-sm max-w-none p-6 bg-white/98 dark:bg-slate-900/98 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm ${markdownStyles}`}>
+                                        <ReactMarkdown 
+                                            remarkPlugins={[remarkGfm, remarkMath]}
+                                            rehypePlugins={[rehypeKatex]}
+                                        >
+                                            {notes}
+                                        </ReactMarkdown>
                                     </div>
-                                )}
-                            </div>
+                                </div>
+                            )}
                         </div>
 
                         <p className="text-[10px] text-slate-400 dark:text-slate-600 pb-2 text-center">
