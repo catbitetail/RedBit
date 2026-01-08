@@ -610,8 +610,8 @@ const App: React.FC = () => {
                                         <span>{t('export_btn')}</span>
                                     </button>
 
-                                    {/* Theme & Effect Toggles - 手机端显示在保存键左边 */}
-                                    <div className="md:hidden flex items-center bg-white/50 dark:bg-slate-800/50 backdrop-blur rounded-full p-1 border border-slate-200/60 dark:border-slate-700/60 shadow-sm">
+                                    {/* Theme & Effect Toggles - 显示在保存键左边 */}
+                                    <div className="flex items-center bg-white/50 dark:bg-slate-800/50 backdrop-blur rounded-full p-1 border border-slate-200/60 dark:border-slate-700/60 shadow-sm">
                                         <button
                                             onClick={toggleEffect}
                                             className={`p-1.5 rounded-full transition-all duration-300 ${showEffect ? 'text-pink-500 bg-pink-50 dark:bg-pink-900/30' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
