@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Rabbit, FilePenLine, MessageSquare, Loader2, Eye, Edit3, Copy, Check, Bold, Italic, List, Heading, Code, Link as LinkIcon, Image as ImageIcon, Paperclip, Download } from 'lucide-react';
+import { X, Send, Rabbit, FilePenLine, MessageSquare, Loader2, Eye, Edit3, Copy, Check, Bold, Italic, List, Heading, Code, Link as LinkIcon, Image as ImageIcon, Paperclip, Download, ChevronDown, FileText } from 'lucide-react';
 import { AnalysisResult, ChatMessage } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { createChatSession } from '../services/geminiService';
@@ -36,28 +36,102 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
     }, [analysisData]);
 
     const [isNotePreview, setIsNotePreview] = useState(true); // Changed: Default to preview/rendered mode
+    const [showExportMenu, setShowExportMenu] = useState(false); // Export format dropdown
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-
+    const exportMenuRef = useRef<HTMLDivElement>(null);
+    
+    // Close export menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
+                setShowExportMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+    
     // Export notes as Markdown file
-    const handleExportNotes = () => {
+    const handleExportMarkdown = () => {
         if (!notes.trim()) {
             alert('没有笔记可以导出');
             return;
         }
-
+    
         const blob = new Blob([notes], { type: 'text/markdown;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-
+            
         // Generate filename with date
         const dateStr = new Date().toISOString().slice(0, 10);
         const title = analysisData.short_title || 'Notes';
         const safeTitle = title.replace(/[\\/:*?"<>|]/g, '_').slice(0, 20);
         a.download = `${safeTitle}_随手记_${dateStr}.md`;
-
+            
         a.click();
         URL.revokeObjectURL(url);
+        setShowExportMenu(false);
+    };
+    
+    // Export notes as PDF (render markdown to HTML then convert)
+    const handleExportPDF = async () => {
+        if (!notes.trim()) {
+            alert('没有笔记可以导出');
+            return;
+        }
+    
+        setShowExportMenu(false);
+            
+        // Create a hidden container to render markdown
+        const container = document.createElement('div');
+        container.style.position = 'absolute';
+        container.style.left = '-9999px';
+        container.style.width = '800px';
+        container.style.padding = '40px';
+        container.style.backgroundColor = 'white';
+        container.style.color = '#1e293b';
+        container.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+        container.style.fontSize = '14px';
+        container.style.lineHeight = '1.6';
+            
+        // Import ReactMarkdown dynamically and render
+        const ReactMarkdown = (await import('react-markdown')).default;
+        const { createRoot } = await import('react-dom/client');
+            
+        document.body.appendChild(container);
+        const root = createRoot(container);
+            
+        // Wait for render
+        await new Promise<void>((resolve) => {
+            root.render(
+                React.createElement(ReactMarkdown, { children: notes })
+            );
+            setTimeout(resolve, 500);
+        });
+    
+        try {
+            const html2pdf = (await import('html2pdf.js')).default;
+            const dateStr = new Date().toISOString().slice(0, 10);
+            const title = analysisData.short_title || 'Notes';
+            const safeTitle = title.replace(/[\\/:*?"<>|]/g, '_').slice(0, 20);
+                
+            await html2pdf()
+                .set({
+                    margin: 15,
+                    filename: `${safeTitle}_随手记_${dateStr}.pdf`,
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                })
+                .from(container)
+                .save();
+        } catch (error) {
+            console.error('PDF export error:', error);
+            alert('PDF 导出失败，请尝试使用 Markdown 格式');
+        } finally {
+            root.unmount();
+            document.body.removeChild(container);
+        }
     };
 
     // Initialize Session and Report
@@ -471,15 +545,43 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
                             )}
 
                             <div className="flex items-center gap-2 ml-2">
-                                {/* 导出按钮 */}
-                                <button
-                                    onClick={handleExportNotes}
-                                    disabled={!notes.trim()}
-                                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 disabled:opacity-40 disabled:cursor-not-allowed"
-                                    title="导出随手记为 Markdown 文件"
-                                >
-                                    <Download className="w-3 h-3" /> 导出
-                                </button>
+                                {/* 导出按钮 - 下拉菜单 */}
+                                <div className="relative" ref={exportMenuRef}>
+                                    <button
+                                        onClick={() => setShowExportMenu(!showExportMenu)}
+                                        disabled={!notes.trim()}
+                                        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                        title="导出随手记"
+                                    >
+                                        <Download className="w-3 h-3" /> 导出 <ChevronDown className={`w-3 h-3 transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
+                                    </button>
+
+                                    {/* 导出格式下拉菜单 */}
+                                    {showExportMenu && notes.trim() && (
+                                        <div className="absolute top-full left-0 mt-1 w-40 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-50 animate-fade-in-up">
+                                            <button
+                                                onClick={handleExportMarkdown}
+                                                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors text-left"
+                                            >
+                                                <FileText className="w-4 h-4" />
+                                                <div>
+                                                    <div className="font-bold">Markdown</div>
+                                                    <div className="text-[10px] text-slate-400">.md 文件</div>
+                                                </div>
+                                            </button>
+                                            <button
+                                                onClick={handleExportPDF}
+                                                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors text-left"
+                                            >
+                                                <Download className="w-4 h-4" />
+                                                <div>
+                                                    <div className="font-bold">PDF</div>
+                                                    <div className="text-[10px] text-slate-400">.pdf 文件</div>
+                                                </div>
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                                 
                                 {/* 编辑/预览切换按钮 */}
                                 <button
