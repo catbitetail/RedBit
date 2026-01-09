@@ -21,6 +21,8 @@ interface Props {
 const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onDataUpdate, onClose }) => {
     const { t } = useLanguage();
     const [activeTab, setActiveTab] = useState<'chat' | 'notes'>('chat');
+    const [sidebarWidth, setSidebarWidth] = useState(416); // 26rem = 416px
+    const [isResizing, setIsResizing] = useState(false);
 
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
@@ -32,6 +34,7 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
     const chatSessionRef = useRef<any>(null); // Changed from Chat to any due to custom proxy implementation
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const chatFileInputRef = useRef<HTMLInputElement>(null);
+    const sidebarRef = useRef<HTMLDivElement>(null);
 
     // Track the latest analysisData to avoid stale closures
     const analysisDataRef = useRef(analysisData);
@@ -52,6 +55,37 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    // Handle sidebar resize
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!isResizing) return;
+            const newWidth = window.innerWidth - e.clientX;
+            // Constrain width between 300px and 80% of window width
+            const minWidth = 300;
+            const maxWidth = window.innerWidth * 0.8;
+            setSidebarWidth(Math.max(minWidth, Math.min(newWidth, maxWidth)));
+        };
+
+        const handleMouseUp = () => {
+            setIsResizing(false);
+        };
+
+        if (isResizing) {
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+            document.body.style.cursor = 'ew-resize';
+            document.body.style.userSelect = 'none';
+        } else {
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        }
+
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isResizing]);
 
     // Export notes as Markdown file
     const handleExportMarkdown = () => {
@@ -97,19 +131,26 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
         container.style.fontSize = '14px';
         container.style.lineHeight = '1.6';
 
-        // Import ReactMarkdown dynamically and render
+        // Import ReactMarkdown and remark plugins dynamically
         const ReactMarkdown = (await import('react-markdown')).default;
+        const remarkGfm = (await import('remark-gfm')).default;
+        const remarkMath = (await import('remark-math')).default;
+        const rehypeKatex = (await import('rehype-katex')).default;
         const { createRoot } = await import('react-dom/client');
 
         document.body.appendChild(container);
         const root = createRoot(container);
 
-        // Wait for render
+        // Wait for render with plugins
         await new Promise<void>((resolve) => {
             root.render(
-                React.createElement(ReactMarkdown, { children: notes })
+                React.createElement(ReactMarkdown, { 
+                    children: notes,
+                    remarkPlugins: [remarkGfm, remarkMath],
+                    rehypePlugins: [rehypeKatex]
+                })
             );
-            setTimeout(resolve, 500);
+            setTimeout(resolve, 1000); // Increase timeout for KaTeX rendering
         });
 
         try {
@@ -122,7 +163,7 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
                 .set({
                     margin: 15,
                     filename: `${safeTitle}_随手记_${dateStr}.pdf`,
-                    html2canvas: { scale: 2 },
+                    html2canvas: { scale: 2, useCORS: true },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                 })
                 .from(container)
@@ -303,7 +344,18 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
   `;
 
     return (
-        <div className="fixed inset-y-0 right-0 w-[26rem] bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl shadow-2xl z-[60] flex flex-col animate-slide-in-right border-l border-white/50 dark:border-slate-700/50">
+        <div 
+            ref={sidebarRef}
+            className="fixed inset-y-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl shadow-2xl z-[60] flex flex-col animate-slide-in-right border-l border-white/50 dark:border-slate-700/50"
+            style={{ width: `${sidebarWidth}px` }}
+        >
+            {/* Resize Handle */}
+            <div
+                className="absolute left-0 top-0 bottom-0 w-1 hover:w-1.5 bg-transparent hover:bg-rose-400/50 cursor-ew-resize transition-all group z-10"
+                onMouseDown={() => setIsResizing(true)}
+            >
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-12 bg-slate-300 dark:bg-slate-600 rounded-r group-hover:bg-rose-400 transition-colors" />
+            </div>
 
             {/* Header */}
             <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white/50 dark:bg-slate-900/50">
@@ -528,7 +580,7 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
                                 onChange={(val) => onNotesChange(val || '')}
                                 preview="live"
                                 hideToolbar={false}
-                                visibleDragbar={false}
+                                visibleDragbar={true}
                                 height="100%"
                                 previewOptions={{
                                     remarkPlugins: [remarkGfm, remarkMath],
