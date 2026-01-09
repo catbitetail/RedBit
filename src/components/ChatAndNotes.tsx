@@ -3,11 +3,12 @@ import { X, Send, Rabbit, FilePenLine, MessageSquare, Loader2, Copy, Check, Bold
 import { AnalysisResult, ChatMessage } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { createChatSession } from '../services/geminiService';
-import ReactMarkdown from 'react-markdown';
+import MDEditor from '@uiw/react-md-editor';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
+import ReactMarkdown from 'react-markdown';
 
 interface Props {
     analysisData: AnalysisResult;
@@ -38,12 +39,9 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
         analysisDataRef.current = analysisData;
     }, [analysisData]);
 
-    const [isNotePreview, setIsNotePreview] = useState(true); // Always true for WYSIWYG mode
     const [showExportMenu, setShowExportMenu] = useState(false); // Export format dropdown
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
     const exportMenuRef = useRef<HTMLDivElement>(null);
-    const editableRef = useRef<HTMLDivElement>(null);
-    
+
     // Close export menu when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -54,39 +52,39 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
-    
+
     // Export notes as Markdown file
     const handleExportMarkdown = () => {
         if (!notes.trim()) {
             alert('没有笔记可以导出');
             return;
         }
-    
+
         const blob = new Blob([notes], { type: 'text/markdown;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-            
+
         // Generate filename with date
         const dateStr = new Date().toISOString().slice(0, 10);
         const title = analysisData.short_title || 'Notes';
         const safeTitle = title.replace(/[\\/:*?"<>|]/g, '_').slice(0, 20);
         a.download = `${safeTitle}_随手记_${dateStr}.md`;
-            
+
         a.click();
         URL.revokeObjectURL(url);
         setShowExportMenu(false);
     };
-    
+
     // Export notes as PDF (render markdown to HTML then convert)
     const handleExportPDF = async () => {
         if (!notes.trim()) {
             alert('没有笔记可以导出');
             return;
         }
-    
+
         setShowExportMenu(false);
-            
+
         // Create a hidden container to render markdown
         const container = document.createElement('div');
         container.style.position = 'absolute';
@@ -98,14 +96,14 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
         container.style.fontFamily = 'system-ui, -apple-system, sans-serif';
         container.style.fontSize = '14px';
         container.style.lineHeight = '1.6';
-            
+
         // Import ReactMarkdown dynamically and render
         const ReactMarkdown = (await import('react-markdown')).default;
         const { createRoot } = await import('react-dom/client');
-            
+
         document.body.appendChild(container);
         const root = createRoot(container);
-            
+
         // Wait for render
         await new Promise<void>((resolve) => {
             root.render(
@@ -113,13 +111,13 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
             );
             setTimeout(resolve, 500);
         });
-    
+
         try {
             const html2pdf = (await import('html2pdf.js')).default;
             const dateStr = new Date().toISOString().slice(0, 10);
             const title = analysisData.short_title || 'Notes';
             const safeTitle = title.replace(/[\\/:*?"<>|]/g, '_').slice(0, 20);
-                
+
             await html2pdf()
                 .set({
                     margin: 15,
@@ -282,57 +280,7 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
     };
 
     // --- NOTES LOGIC ---
-
-    const insertMarkdown = (prefix: string, suffix: string = '') => {
-        if (!textareaRef.current) return;
-        const start = textareaRef.current.selectionStart;
-        const end = textareaRef.current.selectionEnd;
-        const text = textareaRef.current.value;
-        const before = text.substring(0, start);
-        const selected = text.substring(start, end);
-        const after = text.substring(end);
-        const newText = `${before}${prefix}${selected}${suffix}${after}`;
-        onNotesChange(newText);
-        setTimeout(() => {
-            if (textareaRef.current) {
-                textareaRef.current.focus();
-                const newCursorPos = start + prefix.length + selected.length + suffix.length;
-                if (start === end) {
-                    textareaRef.current.setSelectionRange(start + prefix.length, start + prefix.length);
-                } else {
-                    textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
-                }
-            }
-        }, 0);
-    };
-
-    const handleNotePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-        const items = e.clipboardData.items;
-        for (let i = 0; i < items.length; i++) {
-            if (items[i].type.indexOf('image') !== -1) {
-                e.preventDefault();
-                const file = items[i].getAsFile();
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        const base64String = reader.result as string;
-                        // Insert Markdown Image
-                        const imgMarkdown = `\n![Image](${base64String})\n`;
-
-                        if (textareaRef.current) {
-                            const start = textareaRef.current.selectionStart;
-                            const end = textareaRef.current.selectionEnd;
-                            const text = textareaRef.current.value;
-                            const before = text.substring(0, start);
-                            const after = text.substring(end);
-                            onNotesChange(before + imgMarkdown + after);
-                        }
-                    };
-                    reader.readAsDataURL(file);
-                }
-            }
-        }
-    };
+    // MDEditor handles its own toolbar and paste events
 
     const markdownStyles = `
     text-sm leading-relaxed overflow-x-hidden text-slate-700 dark:text-slate-300
@@ -532,19 +480,8 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
                 {/* Notes Tab */}
                 {activeTab === 'notes' && (
                     <div className="absolute inset-0 flex flex-col bg-slate-50/30 dark:bg-slate-900/30">
-                        <div className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 p-2 flex justify-between items-center">
-                            {/* Markdown 工具栏 */}
-                            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar px-1">
-                                <button onClick={() => insertMarkdown('**', '**')} title="Bold" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><Bold className="w-4 h-4" /></button>
-                                <button onClick={() => insertMarkdown('*', '*')} title="Italic" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><Italic className="w-4 h-4" /></button>
-                                <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                                <button onClick={() => insertMarkdown('# ')} title="Heading 1" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><Heading className="w-4 h-4" /></button>
-                                <button onClick={() => insertMarkdown('- ')} title="List" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><List className="w-4 h-4" /></button>
-                                <button onClick={() => insertMarkdown('```\n', '\n```')} title="Code Block" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><Code className="w-4 h-4" /></button>
-                                <button onClick={() => insertMarkdown('[', '](url)')} title="Link" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><LinkIcon className="w-4 h-4" /></button>
-                                <button onClick={() => insertMarkdown('$', '$')} title="Inline Math" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-xs font-bold">$x$</button>
-                            </div>
-
+                        {/* Export button header */}
+                        <div className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 p-2 flex justify-end items-center">
                             {/* 导出按钮 */}
                             <div className="relative" ref={exportMenuRef}>
                                 <button
@@ -584,36 +521,23 @@ const ChatAndNotes: React.FC<Props> = ({ analysisData, notes, onNotesChange, onD
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-4 relative">
-                            {/* Always-visible textarea for input */}
-                            <textarea
-                                ref={textareaRef}
+                        {/* WYSIWYG Markdown Editor - Typora style */}
+                        <div className="flex-1 overflow-hidden" data-color-mode="light">
+                            <MDEditor
                                 value={notes}
-                                onChange={(e) => onNotesChange(e.target.value)}
-                                onFocus={() => setIsNotePreview(false)}
-                                onBlur={() => setIsNotePreview(true)}
-                                onPaste={handleNotePaste}
-                                placeholder={t('notes_placeholder') + " (Markdown, LaTeX & Images Supported)"}
-                                className="w-full h-full p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl resize-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-mono placeholder:text-slate-300 dark:placeholder:text-slate-600"
-                                style={{ minHeight: '400px' }}
+                                onChange={(val) => onNotesChange(val || '')}
+                                preview="live"
+                                hideToolbar={false}
+                                visibleDragbar={false}
+                                height="100%"
+                                previewOptions={{
+                                    remarkPlugins: [remarkGfm, remarkMath],
+                                    rehypePlugins: [rehypeKatex],
+                                }}
+                                textareaProps={{
+                                    placeholder: t('notes_placeholder') + ' (Markdown, LaTeX & Images Supported)',
+                                }}
                             />
-                            
-                            {/* Markdown Preview Overlay (shows when not focused and has content) */}
-                            {notes && isNotePreview && (
-                                <div 
-                                    className="absolute inset-0 overflow-y-auto p-4 pointer-events-none"
-                                    style={{ top: '0px' }}
-                                >
-                                    <div className={`prose prose-sm max-w-none p-6 bg-white/98 dark:bg-slate-900/98 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm ${markdownStyles}`}>
-                                        <ReactMarkdown 
-                                            remarkPlugins={[remarkGfm, remarkMath]}
-                                            rehypePlugins={[rehypeKatex]}
-                                        >
-                                            {notes}
-                                        </ReactMarkdown>
-                                    </div>
-                                </div>
-                            )}
                         </div>
 
                         <p className="text-[10px] text-slate-400 dark:text-slate-600 pb-2 text-center">
